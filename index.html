@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>合同会社xgwi</title>
+  <meta name="description" content="合同会社xgwi - 金融商品への投資・運用・管理、及び投資・金融に関するシステム開発">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg: #fafaf9;
+      --color-surface: #ffffff;
+      --color-text: #1c1917;
+      --color-text-secondary: #57534e;
+      --color-text-tertiary: #a8a29e;
+      --color-accent: #1e3a5f;
+      --color-accent-light: #2d5a8e;
+      --color-border: #e7e5e4;
+      --color-border-light: #f0efed;
+      --font-jp: 'Noto Sans JP', sans-serif;
+      --font-en: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-jp);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ── */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(250, 250, 249, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--color-accent);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .logo span {
+      font-weight: 400;
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      margin-right: 0.5rem;
+      font-family: var(--font-jp);
+      letter-spacing: 0.08em;
+    }
+
+    nav a {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    nav a:hover {
+      color: var(--color-accent);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 10rem 2rem 6rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-en);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.2s;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--color-text);
+      letter-spacing: -0.01em;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.4s;
+    }
+
+    .hero p {
+      font-size: 0.95rem;
+      color: var(--color-text-secondary);
+      max-width: 560px;
+      line-height: 2;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.6s;
+    }
+
+    .hero-line {
+      width: 48px;
+      height: 2px;
+      background: var(--color-accent);
+      margin-top: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.8s;
+    }
+
+    /* ── Sections ── */
+    section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+    }
+
+    .section-label {
+      font-family: var(--font-en);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 3rem;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── Business ── */
+    .business-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .business-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 2rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .business-card:hover {
+      border-color: var(--color-accent);
+      box-shadow: 0 4px 24px rgba(30, 58, 95, 0.06);
+    }
+
+    .business-card .number {
+      font-family: var(--font-en);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--color-accent);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .business-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .business-card p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.9;
+    }
+
+    /* ── Company Info ── */
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .info-table tr {
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .info-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .info-table th {
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      padding: 1.25rem 2rem 1.25rem 0;
+      white-space: nowrap;
+      width: 140px;
+      vertical-align: top;
+    }
+
+    .info-table td {
+      font-size: 0.9rem;
+      padding: 1.25rem 0;
+      line-height: 1.8;
+    }
+
+    /* ── Contact ── */
+    .contact-section {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 3.5rem;
+      margin: 2rem auto 0;
+      max-width: 960px;
+      text-align: center;
+    }
+
+    .contact-section .section-label,
+    .contact-section .section-title {
+      text-align: center;
+    }
+
+    .contact-section .section-title {
+      margin-bottom: 1rem;
+    }
+
+    .contact-description {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    .contact-email {
+      font-family: var(--font-en);
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--color-accent);
+      text-decoration: none;
+      padding: 0.75rem 2rem;
+      border: 1px solid var(--color-accent);
+      border-radius: 8px;
+      display: inline-block;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .contact-email:hover {
+      background: var(--color-accent);
+      color: #fff;
+    }
+
+    /* ── Footer ── */
+    footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+    }
+
+    footer .footer-logo {
+      font-family: var(--font-en);
+      font-weight: 600;
+      color: var(--color-text-tertiary);
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .header-inner {
+        padding: 0 1.25rem;
+      }
+
+      .logo span {
+        display: none;
+      }
+
+      nav a {
+        margin-left: 1.25rem;
+        font-size: 0.75rem;
+      }
+
+      .hero {
+        padding: 8rem 1.25rem 4rem;
+      }
+
+      section {
+        padding: 3.5rem 1.25rem;
+      }
+
+      .business-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-section {
+        padding: 2.5rem 1.5rem;
+        margin-left: 1.25rem;
+        margin-right: 1.25rem;
+      }
+
+      .info-table th {
+        display: block;
+        padding-bottom: 0.25rem;
+        width: 100%;
+      }
+
+      .info-table td {
+        display: block;
+        padding-top: 0;
+        padding-bottom: 1.25rem;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        padding: 2rem 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="#" class="logo"><span>合同会社</span>xgwi</a>
+      <nav>
+        <a href="#business">事業内容</a>
+        <a href="#company">会社概要</a>
+        <a href="#contact">お問い合わせ</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">xgwi LLC</div>
+    <h1>テクノロジーの力で<br>金融市場に向き合う</h1>
+    <p>合同会社xgwiは、金融商品への投資・運用・管理を主軸に、投資及び金融に関するシステム・ツールの開発を通じて、データドリブンな意思決定を追求します。</p>
+    <div class="hero-line"></div>
+  </section>
+
+  <!-- Business -->
+  <section id="business" class="fade-in">
+    <div class="section-label">Business</div>
+    <h2 class="section-title">事業内容</h2>
+    <div class="business-grid">
+      <div class="business-card">
+        <div class="number">01</div>
+        <h3>投資・運用・管理</h3>
+        <p>有価証券、外国為替、暗号資産、デリバティブ及びその他の金融商品への投資、運用及び管理を行います。定量的分析に基づくリスク管理を重視し、安定的な資産運用を目指します。</p>
+      </div>
+      <div class="business-card">
+        <div class="number">02</div>
+        <h3>システム・ツール開発</h3>
+        <p>投資及び金融に関するシステム及びツールの企画、開発、運用及び保守を行います。自社の投資活動を支える技術基盤の構築に取り組んでいます。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Company -->
+  <section id="company" class="fade-in">
+    <div class="section-label">Company</div>
+    <h2 class="section-title">会社概要</h2>
+    <table class="info-table">
+      <tr>
+        <th>商号</th>
+        <td>合同会社xgwi</td>
+      </tr>
+      <tr>
+        <th>設立</th>
+        <td>2026年3月</td>
+      </tr>
+      <tr>
+        <th>所在地</th>
+        <td id="js-addr"></td>
+      </tr>
+      <tr>
+        <th>事業内容</th>
+        <td>
+          有価証券、外国為替、暗号資産、デリバティブ及びその他の金融商品への投資、運用及び管理<br>
+          投資及び金融に関するシステム及びツールの企画、開発、運用及び保守<br>
+          前各号に附帯又は関連する一切の事業
+        </td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- Contact -->
+  <div style="padding: 0 0 5rem;" class="fade-in">
+    <div class="contact-section" id="contact">
+      <div class="section-label">Contact</div>
+      <h2 class="section-title">お問い合わせ</h2>
+      <p class="contact-description">ご質問・ご連絡は下記メールアドレスまでお願いいたします。</p>
+      <span id="js-email"></span>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">xgwi LLC</div>
+    <div>&copy; 2026 合同会社xgwi. All rights reserved.</div>
+  </footer>
+
+  <!-- Scroll Animation + Sensitive Info (JS-rendered to avoid indexing) -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ★ 以下を書き換えてください
+    // 検索エンジンに直接インデックスされにくくするため
+    // HTMLではなくJSで描画しています
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const info = {
+      addr:  '千葉県市原市',
+      email: 'uchita.inc@gmail.com'
+    };
+
+    document.getElementById('js-addr').textContent = info.addr;
+
+    const emailEl = document.getElementById('js-email');
+    const a = document.createElement('a');
+    a.href = 'mai' + 'lto:' + info.email;
+    a.className = 'contact-email';
+    a.textContent = info.email;
+    emailEl.appendChild(a);
+  </script>
+
+</body>
+</html>
