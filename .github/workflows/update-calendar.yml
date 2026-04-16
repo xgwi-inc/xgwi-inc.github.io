@@ -1,0 +1,33 @@
+name: Update Economic Calendar
+
+on:
+  schedule:
+    # 毎月1日と15日 JST 9:00 (UTC 0:00) に実行
+    - cron: '0 0 1,15 * *'
+  workflow_dispatch: # 手動実行も可能
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate calendar data
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python scripts/update_calendar.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/calendar.json
+          git diff --cached --quiet || git commit -m "update calendar.json ($(date -u +%Y-%m-%dT%H:%M)Z)"
+          git push

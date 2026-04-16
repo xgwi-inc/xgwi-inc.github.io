@@ -1,0 +1,16 @@
+[
+  {"date": "2026-04-01", "localTime": "11:00", "region": "eu", "country": "eu", "flag": "🇪🇺", "type": "unemp", "label": "失業率", "source": "Eurostat"},
+  {"date": "2026-04-08", "localTime": "11:00", "region": "eu", "country": "eu", "flag": "🇪🇺", "type": "ppi", "label": "PPI", "source": "Eurostat"},
+  {"date": "2026-04-10", "localTime": "08:50", "region": "jp", "country": "jp", "flag": "🇯🇵", "type": "ppi", "label": "CGPI（企業物価指数）", "source": "BoJ"},
+  {"date": "2026-04-10", "localTime": "08:30", "region": "ca", "country": "ca", "flag": "🇨🇦", "type": "unemp", "label": "雇用統計（失業率）", "source": "Statistics Canada"},
+  {"date": "2026-04-16", "localTime": "11:00", "region": "eu", "country": "eu", "flag": "🇪🇺", "type": "cpi", "label": "HICP（確報値）", "source": "Eurostat"},
+  {"date": "2026-04-16", "localTime": "11:30", "region": "au", "country": "au", "flag": "🇦🇺", "type": "unemp", "label": "雇用統計（失業率）", "source": "ABS"},
+  {"date": "2026-04-20", "localTime": "08:30", "region": "ca", "country": "ca", "flag": "🇨🇦", "type": "cpi", "label": "CPI", "source": "Statistics Canada"},
+  {"date": "2026-04-21", "localTime": "07:00", "region": "gb", "country": "gb", "flag": "🇬🇧", "type": "unemp", "label": "雇用統計（失業率）", "source": "ONS"},
+  {"date": "2026-04-22", "localTime": "07:00", "region": "gb", "country": "gb", "flag": "🇬🇧", "type": "ppi", "label": "PPI", "source": "ONS"},
+  {"date": "2026-04-23", "localTime": "08:30", "region": "ca", "country": "ca", "flag": "🇨🇦", "type": "ppi", "label": "IPPI（鉱工業製品価格）", "source": "Statistics Canada"},
+  {"date": "2026-04-24", "localTime": "08:50", "region": "jp", "country": "jp", "flag": "🇯🇵", "type": "ppi", "label": "サービス業PPI", "source": "BoJ"},
+  {"date": "2026-04-29", "localTime": "11:30", "region": "au", "country": "au", "flag": "🇦🇺", "type": "cpi", "label": "CPI（月次）", "source": "ABS"},
+  {"date": "2026-04-30", "localTime": "11:00", "region": "eu", "country": "eu", "flag": "🇪🇺", "type": "cpi", "label": "HICP速報値（4月）", "source": "Eurostat"},
+  {"date": "2026-04-30", "localTime": "11:30", "region": "au", "country": "au", "flag": "🇦🇺", "type": "ppi", "label": "貿易物価指数", "source": "ABS"}
+]

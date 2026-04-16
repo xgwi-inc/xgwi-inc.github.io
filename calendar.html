@@ -342,6 +342,43 @@
       .page-hero { padding: 7rem 1rem 2rem; }
     }
 
+    /* ── Month Nav ── */
+    .month-nav {
+      max-width: 960px;
+      margin: 0 auto 1.5rem;
+      padding: 0 2rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .month-btn {
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      background: var(--color-surface);
+      font-family: var(--font-en);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .month-btn:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .month-btn.active {
+      background: var(--color-accent);
+      color: #fff;
+      border-color: var(--color-accent);
+    }
+
+    @media (max-width: 700px) {
+      .month-nav { padding: 0 1rem; }
+    }
+
     /* ── Footer ── */
     footer {
       max-width: 960px;
@@ -394,9 +431,12 @@
     </div>
   </div>
 
+  <!-- Month navigation -->
+  <div class="month-nav" id="month-nav"></div>
+
   <!-- Calendar Grid (desktop) -->
   <div class="calendar-container">
-    <div class="calendar-month">April 2026</div>
+    <div class="calendar-month" id="cal-month-title"></div>
     <div class="calendar-grid" id="cal-grid"></div>
   </div>
 
@@ -410,60 +450,45 @@
   </footer>
 
   <script>
-    // ── Event Data: April 2026 (JST) ──
-    // Sources: BLS, FRED, Eurostat, ECB, ONS, BoE, StatCan, BoC, ABS, RBA, BoJ, 総務省
-    const EVENTS = [
-      // Apr 1 (Wed)
-      { day: 1, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'unemp', label: '失業率' },
-      // Apr 3 (Fri)
-      { day: 3, time: '21:30', country: 'us', flag: '🇺🇸', type: 'unemp', label: '雇用統計（失業率）' },
-      // Apr 8 (Wed)
-      { day: 8, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'ppi', label: 'PPI' },
-      // Apr 10 (Fri)
-      { day: 10, time: '08:50', country: 'jp', flag: '🇯🇵', type: 'ppi', label: 'CGPI（企業物価指数）' },
-      { day: 10, time: '21:30', country: 'us', flag: '🇺🇸', type: 'cpi', label: 'CPI' },
-      { day: 10, time: '21:30', country: 'ca', flag: '🇨🇦', type: 'unemp', label: '雇用統計（失業率）' },
-      // Apr 14 (Tue)
-      { day: 14, time: '21:30', country: 'us', flag: '🇺🇸', type: 'ppi', label: 'PPI' },
-      // Apr 16 (Thu) — today
-      { day: 16, time: '10:30', country: 'au', flag: '🇦🇺', type: 'unemp', label: '雇用統計（失業率）' },
-      { day: 16, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'cpi', label: 'HICP（確報値）' },
-      // Apr 20 (Mon)
-      { day: 20, time: '21:30', country: 'ca', flag: '🇨🇦', type: 'cpi', label: 'CPI' },
-      // Apr 21 (Tue)
-      { day: 21, time: '15:00', country: 'gb', flag: '🇬🇧', type: 'unemp', label: '雇用統計（失業率）' },
-      // Apr 22 (Wed)
-      { day: 22, time: '15:00', country: 'gb', flag: '🇬🇧', type: 'ppi', label: 'PPI' },
-      // Apr 23 (Thu)
-      { day: 23, time: '21:30', country: 'ca', flag: '🇨🇦', type: 'ppi', label: 'IPPI（鉱工業製品価格）' },
-      // Apr 24 (Fri)
-      { day: 24, time: '08:50', country: 'jp', flag: '🇯🇵', type: 'ppi', label: 'サービス業PPI' },
-      // Apr 28 (Tue) — BoJ MPM Day 2
-      { day: 28, time: '12:00', country: 'jp', flag: '🇯🇵', type: 'rate', label: '日銀 金融政策決定会合' },
-      // Apr 29 (Wed)
-      { day: 29, time: '10:30', country: 'au', flag: '🇦🇺', type: 'cpi', label: 'CPI（月次）' },
-      { day: 29, time: '22:45', country: 'ca', flag: '🇨🇦', type: 'rate', label: 'BoC 政策金利発表' },
-      // Apr 30 (Thu) — FOMC is 3:00 JST = 2:00 PM ET Apr 29
-      { day: 30, time: '03:00', country: 'us', flag: '🇺🇸', type: 'rate', label: 'FOMC 政策金利発表' },
-      { day: 30, time: '10:30', country: 'au', flag: '🇦🇺', type: 'ppi', label: '貿易物価指数' },
-      { day: 30, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'cpi', label: 'HICP速報値（4月）' },
-      { day: 30, time: '20:00', country: 'gb', flag: '🇬🇧', type: 'rate', label: 'BoE 政策金利発表' },
-      { day: 30, time: '21:15', country: 'eu', flag: '🇪🇺', type: 'rate', label: 'ECB 政策金利発表' },
-    ];
-
-    const TODAY = 16; // April 16, 2026
-    const YEAR = 2026;
-    const MONTH = 4;
-    const DAYS_IN_MONTH = 30;
-    // April 1, 2026 = Wednesday (0=Sun ... 3=Wed)
-    const FIRST_DAY_OF_WEEK = 3;
-
     const DOW_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+    const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
 
-    function buildCalendarGrid() {
+    let calendarData = null;
+    let currentMonth = null;
+
+    function daysInMonth(year, month) {
+      return new Date(year, month, 0).getDate();
+    }
+
+    function firstDayOfWeek(year, month) {
+      return new Date(year, month - 1, 1).getDay();
+    }
+
+    function todayStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function renderMonth(ym) {
+      currentMonth = ym;
+      const [year, month] = ym.split('-').map(Number);
+      const days = daysInMonth(year, month);
+      const fdow = firstDayOfWeek(year, month);
+      const today = todayStr();
+      const events = calendarData.events.filter(e => e.date.startsWith(ym));
+
+      // Update nav active state
+      document.querySelectorAll('.month-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.month === ym);
+      });
+
+      // Title
+      document.getElementById('cal-month-title').textContent = `${MONTH_NAMES[month]} ${year}`;
+
+      // Grid
       const grid = document.getElementById('cal-grid');
-
-      // Day-of-week headers
+      grid.innerHTML = '';
       DOW_LABELS.forEach((d, i) => {
         const el = document.createElement('div');
         el.className = 'cal-header' + (i === 0 ? ' sun' : i === 6 ? ' sat' : '');
@@ -471,22 +496,21 @@
         grid.appendChild(el);
       });
 
-      // Empty cells before the 1st
-      for (let i = 0; i < FIRST_DAY_OF_WEEK; i++) {
+      for (let i = 0; i < fdow; i++) {
         const el = document.createElement('div');
         el.className = 'cal-cell empty';
         grid.appendChild(el);
       }
 
-      // Day cells
-      for (let day = 1; day <= DAYS_IN_MONTH; day++) {
-        const dow = (FIRST_DAY_OF_WEEK + day - 1) % 7;
+      for (let day = 1; day <= days; day++) {
+        const dateStr = `${ym}-${String(day).padStart(2, '0')}`;
+        const dow = (fdow + day - 1) % 7;
         const cell = document.createElement('div');
         const classes = ['cal-cell'];
         if (dow === 0) classes.push('sun');
         if (dow === 6) classes.push('sat');
-        if (day === TODAY) classes.push('today');
-        if (day < TODAY) classes.push('past');
+        if (dateStr === today) classes.push('today');
+        if (dateStr < today) classes.push('past');
         cell.className = classes.join(' ');
 
         const dayLabel = document.createElement('div');
@@ -494,68 +518,88 @@
         dayLabel.textContent = day;
         cell.appendChild(dayLabel);
 
-        const dayEvents = EVENTS.filter(e => e.day === day)
+        const dayEvents = events.filter(e => e.date === dateStr)
           .sort((a, b) => a.time.localeCompare(b.time));
 
         if (dayEvents.length > 0) {
           const evContainer = document.createElement('div');
           evContainer.className = 'cal-events';
-
           dayEvents.forEach(ev => {
+            const isPast = dateStr < today;
             const evEl = document.createElement('div');
-            const isPast = day < TODAY;
             evEl.className = `cal-event type-${ev.type}${isPast ? ' past-event' : ''}`;
             evEl.title = `${ev.flag} ${ev.label}\n${ev.time} JST`;
             evEl.innerHTML = `
               <span class="flag">${ev.flag}</span>
               <span class="ev-text">${ev.label}</span>
-              <span class="ev-time">${ev.time}</span>
-            `;
+              <span class="ev-time">${ev.time}</span>`;
             evContainer.appendChild(evEl);
           });
-
           cell.appendChild(evContainer);
         }
-
         grid.appendChild(cell);
       }
-    }
 
-    function buildListView() {
+      // List view (mobile)
       const list = document.getElementById('cal-list');
-      const daysWithEvents = [...new Set(EVENTS.map(e => e.day))].sort((a, b) => a - b);
+      list.innerHTML = '';
+      const daysWithEvents = [...new Set(events.map(e => e.date))].sort();
 
-      daysWithEvents.forEach(day => {
+      daysWithEvents.forEach(dateStr => {
+        const day = parseInt(dateStr.split('-')[2], 10);
+        const dow = (fdow + day - 1) % 7;
         const dayDiv = document.createElement('div');
         dayDiv.className = 'list-day';
 
-        const dow = (FIRST_DAY_OF_WEEK + day - 1) % 7;
         const header = document.createElement('div');
-        header.className = 'list-day-header' + (day === TODAY ? ' today' : '');
-        header.textContent = `${MONTH}/${day}（${DOW_LABELS[dow]}）`;
+        header.className = 'list-day-header' + (dateStr === today ? ' today' : '');
+        header.textContent = `${month}/${day}（${DOW_LABELS[dow]}）`;
         dayDiv.appendChild(header);
 
-        const dayEvents = EVENTS.filter(e => e.day === day)
-          .sort((a, b) => a.time.localeCompare(b.time));
-
-        dayEvents.forEach(ev => {
-          const isPast = day < TODAY;
-          const evEl = document.createElement('div');
-          evEl.className = `list-event type-${ev.type}${isPast ? ' past-event' : ''}`;
-          evEl.innerHTML = `
-            <span class="ev-time">${ev.time}</span>
-            <span class="flag">${ev.flag}</span>
-            <span class="ev-text">${ev.label}</span>
-          `;
-          dayDiv.appendChild(evEl);
-        });
-
+        events.filter(e => e.date === dateStr)
+          .sort((a, b) => a.time.localeCompare(b.time))
+          .forEach(ev => {
+            const isPast = dateStr < today;
+            const evEl = document.createElement('div');
+            evEl.className = `list-event type-${ev.type}${isPast ? ' past-event' : ''}`;
+            evEl.innerHTML = `
+              <span class="ev-time">${ev.time}</span>
+              <span class="flag">${ev.flag}</span>
+              <span class="ev-text">${ev.label}</span>`;
+            dayDiv.appendChild(evEl);
+          });
         list.appendChild(dayDiv);
       });
     }
 
-    buildCalendarGrid();
-    buildListView();
+    function buildMonthNav(months) {
+      const nav = document.getElementById('month-nav');
+      months.forEach(ym => {
+        const [y, m] = ym.split('-').map(Number);
+        const btn = document.createElement('button');
+        btn.className = 'month-btn';
+        btn.dataset.month = ym;
+        btn.textContent = `${y}年${m}月`;
+        btn.addEventListener('click', () => renderMonth(ym));
+        nav.appendChild(btn);
+      });
+    }
+
+    // Load data and render
+    fetch('data/calendar.json')
+      .then(r => r.json())
+      .then(data => {
+        calendarData = data;
+        buildMonthNav(data.months);
+        // Show current month if available, otherwise first month
+        const today = todayStr().slice(0, 7);
+        const startMonth = data.months.includes(today) ? today : data.months[0];
+        renderMonth(startMonth);
+      })
+      .catch(err => {
+        document.getElementById('cal-grid').innerHTML =
+          '<div style="grid-column:1/-1;padding:2rem;text-align:center;color:#a8a29e">データの読み込みに失敗しました</div>';
+      });
   </script>
 </body>
 </html>
