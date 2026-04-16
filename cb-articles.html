@@ -212,6 +212,51 @@
       font-size: 0.9rem;
     }
 
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 2rem 0 0;
+    }
+
+    .pagination button {
+      font-family: var(--font-en);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 0.4rem 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .pagination button:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    .pagination button.active {
+      background: var(--color-accent);
+      color: #fff;
+      border-color: var(--color-accent);
+    }
+
+    .pagination-info {
+      font-size: 0.78rem;
+      color: var(--color-text-tertiary);
+      text-align: center;
+      margin-top: 0.75rem;
+    }
+
     /* ── Footer ── */
     footer {
       max-width: 960px;
@@ -286,6 +331,7 @@
       <nav>
         <a href="index.html">ホーム</a>
         <a href="data.html">経済指標</a>
+        <a href="calendar.html">カレンダー</a>
         <a href="cb-articles.html">CB発言</a>
       </nav>
     </div>
@@ -295,7 +341,7 @@
   <div class="page-hero">
     <div class="section-label">Central Bank Speeches &amp; Statements</div>
     <h1>中央銀行関係者の発言</h1>
-    <p>ロイター日本語版による各国中央銀行関係者の発言・声明に関する記事（直近2週間）</p>
+    <p>ロイター日本語版による各国中央銀行関係者の発言・声明に関する記事</p>
     <div class="meta-info" id="meta-info"></div>
   </div>
 
@@ -349,6 +395,80 @@
       });
     }
 
+    const PER_PAGE = 30;
+    let allArticles = [];
+    let currentPage = 1;
+
+    function renderPage(page) {
+      currentPage = page;
+      const container = document.getElementById('articles-container');
+      const totalPages = Math.ceil(allArticles.length / PER_PAGE);
+      const start = (page - 1) * PER_PAGE;
+      const end = Math.min(start + PER_PAGE, allArticles.length);
+      const pageArticles = allArticles.slice(start, end);
+
+      const ul = document.createElement('ul');
+      ul.className = 'article-list';
+
+      for (const article of pageArticles) {
+        const li = document.createElement('li');
+        li.className = 'article-item';
+
+        const a = document.createElement('a');
+        a.className = 'article-link';
+        a.href = article.link;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'article-date';
+        dateSpan.textContent = formatDate(article.pubDate);
+
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'article-title';
+
+        const tags = detectTags(article.title);
+        let tagHtml = '';
+        for (const tag of tags) {
+          tagHtml += `<span class="article-tag">${tag}</span>`;
+        }
+        titleSpan.innerHTML = tagHtml + article.title
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+
+        a.appendChild(dateSpan);
+        a.appendChild(titleSpan);
+        li.appendChild(a);
+        ul.appendChild(li);
+      }
+
+      // Pagination controls
+      let paginationHtml = '';
+      if (totalPages > 1) {
+        paginationHtml += '<div class="pagination">';
+        paginationHtml += `<button onclick="goPage(${page - 1})" ${page === 1 ? 'disabled' : ''}>&laquo;</button>`;
+        for (let p = 1; p <= totalPages; p++) {
+          paginationHtml += `<button onclick="goPage(${p})" class="${p === page ? 'active' : ''}">${p}</button>`;
+        }
+        paginationHtml += `<button onclick="goPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>&raquo;</button>`;
+        paginationHtml += '</div>';
+        paginationHtml += `<div class="pagination-info">${start + 1}–${end} / ${allArticles.length}件</div>`;
+      }
+
+      container.innerHTML = '';
+      container.appendChild(ul);
+      container.insertAdjacentHTML('beforeend', paginationHtml);
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goPage(page) {
+      const totalPages = Math.ceil(allArticles.length / PER_PAGE);
+      if (page < 1 || page > totalPages) return;
+      renderPage(page);
+    }
+
     async function loadArticles() {
       const container = document.getElementById('articles-container');
       const meta = document.getElementById('meta-info');
@@ -365,44 +485,8 @@
           return;
         }
 
-        const ul = document.createElement('ul');
-        ul.className = 'article-list';
-
-        for (const article of data.articles) {
-          const li = document.createElement('li');
-          li.className = 'article-item';
-
-          const a = document.createElement('a');
-          a.className = 'article-link';
-          a.href = article.link;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-
-          const dateSpan = document.createElement('span');
-          dateSpan.className = 'article-date';
-          dateSpan.textContent = formatDate(article.pubDate);
-
-          const titleSpan = document.createElement('span');
-          titleSpan.className = 'article-title';
-
-          const tags = detectTags(article.title);
-          let tagHtml = '';
-          for (const tag of tags) {
-            tagHtml += `<span class="article-tag">${tag}</span>`;
-          }
-          titleSpan.innerHTML = tagHtml + article.title
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-
-          a.appendChild(dateSpan);
-          a.appendChild(titleSpan);
-          li.appendChild(a);
-          ul.appendChild(li);
-        }
-
-        container.innerHTML = '';
-        container.appendChild(ul);
+        allArticles = data.articles;
+        renderPage(1);
 
       } catch (err) {
         container.innerHTML = `<div class="error">${err.message}</div>`;
