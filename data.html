@@ -293,6 +293,9 @@
       <button class="tab-btn active" data-country="us">United States</button>
       <button class="tab-btn" data-country="ca">Canada</button>
       <button class="tab-btn" data-country="eu">Euro Area</button>
+      <button class="tab-btn" data-country="gb">United Kingdom</button>
+      <button class="tab-btn" data-country="au">Australia</button>
+      <button class="tab-btn" data-country="jp">Japan</button>
     </div>
   </div>
 
@@ -311,7 +314,10 @@
     const COUNTRIES = [
       { code: 'us', name: 'United States' },
       { code: 'ca', name: 'Canada' },
-      { code: 'eu', name: 'Euro Area' }
+      { code: 'eu', name: 'Euro Area' },
+      { code: 'gb', name: 'United Kingdom' },
+      { code: 'au', name: 'Australia' },
+      { code: 'jp', name: 'Japan' }
     ];
 
     const dataCache = {};
@@ -414,20 +420,28 @@
       const rateLatest = getLatest(data.interestRate, data.labels);
       const cpiLatest = getLatest(data.cpi, data.labels);
       const unempLatest = getLatest(data.unemployment, data.labels);
-      const hasNull = data.cpi.includes(null) || data.unemployment.includes(null);
+      const hasCpi = cpiLatest.value !== undefined;
+
+      const cpiPill = hasCpi
+        ? `<span class="latest-pill" style="--pill-color: #b45309;">CPI <strong>${cpiLatest.value}%</strong>（${cpiLatest.date}）</span>`
+        : '';
+      const chartTitle = hasCpi ? '政策金利 / CPI（前年比）' : '政策金利';
+      const chartMeta = hasCpi
+        ? `出典: ${data.sources.interestRate} / ${data.sources.cpi}`
+        : `出典: ${data.sources.interestRate}`;
 
       area.innerHTML = `
         <div class="chart-card">
-          <h3>政策金利 / CPI（前年比）</h3>
-          <div class="chart-meta">出典: ${data.sources.interestRate} / ${data.sources.cpi}</div>
+          <h3>${chartTitle}</h3>
+          <div class="chart-meta">${chartMeta}</div>
           <div class="latest-values">
             <span class="latest-pill" style="--pill-color: #1e3a5f;">政策金利 <strong>${rateLatest.value}%</strong>（${rateLatest.date}）</span>
-            <span class="latest-pill" style="--pill-color: #b45309;">CPI <strong>${cpiLatest.value}%</strong>（${cpiLatest.date}）</span>
+            ${cpiPill}
           </div>
           <div class="chart-wrapper">
             <canvas id="chart-rate-cpi"></canvas>
           </div>
-          ${hasNull ? '<div class="note">※ 一部データは政府機関の予算失効により欠損しています。</div>' : ''}
+          ${!hasCpi ? '<div class="note">※ CPIデータは現在取得できていません。</div>' : ''}
         </div>
         <div class="chart-card">
           <h3>失業率</h3>
@@ -444,14 +458,19 @@
 
       // ── Chart 1: Interest Rate + CPI ──
       const ctx1 = document.getElementById('chart-rate-cpi').getContext('2d');
+      const rateCpiDatasets = [
+        makeDataset(data.interestRate, '#1e3a5f', 'rgba(30, 58, 95, 0.06)', '政策金利')
+      ];
+      if (hasCpi) {
+        rateCpiDatasets.push(
+          makeDataset(data.cpi, '#b45309', 'rgba(180, 83, 9, 0.06)', 'CPI（前年比）')
+        );
+      }
       chartInstances.push(new Chart(ctx1, {
         type: 'line',
         data: {
           labels: formatLabels,
-          datasets: [
-            makeDataset(data.interestRate, '#1e3a5f', 'rgba(30, 58, 95, 0.06)', '政策金利'),
-            makeDataset(data.cpi, '#b45309', 'rgba(180, 83, 9, 0.06)', 'CPI（前年比）')
-          ]
+          datasets: rateCpiDatasets
         },
         options: {
           responsive: true,

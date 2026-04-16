@@ -10,6 +10,9 @@
   US     - FRED API (FEDFUNDS, CPIAUCSL, UNRATE)
   Canada - FRED API (IRSTCI01CAM156N, LRUNTTTTCAM156S) + Bank of Canada (CPI)
   EU     - ECB Data API (HICP) + Eurostat API (unemployment) + ECB (deposit rate)
+  UK     - FRED API (GBRCPIALLMINMEI, LRHUTTTTGBM156S) + BoE Bank Rate (hardcoded)
+  AU     - OECD API (CPI) + FRED API (unemployment) + RBA Cash Rate (hardcoded)
+  JP     - FRED API (LRHUTTTTJPM156S) + BoJ Policy Rate (hardcoded) + CPI (未対応)
 """
 
 import json
@@ -33,7 +36,7 @@ FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def fetch_url(url, accept=None):
-    headers = {}
+    headers = {"User-Agent": "Mozilla/5.0 (economic-data-updater)"}
     if accept:
         headers["Accept"] = accept
     req = Request(url, headers=headers)
@@ -257,6 +260,134 @@ def fetch_boc_cpi():
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  Central bank rate step functions
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def build_rate_step_function(decisions, pre_rate):
+    """Build monthly step-function series from central bank decision dates.
+    decisions: list of (year, month, rate) tuples, sorted chronologically.
+    pre_rate: rate before the first decision in the list.
+    """
+    current_rate = pre_rate
+    decision_map = {}
+    for y, m, r in decisions:
+        key = f"{y:04d}-{m:02d}"
+        decision_map[key] = r
+
+    result = {}
+    now = datetime.now()
+    y, m = 2016, 1
+    while (y, m) <= (now.year, now.month):
+        key = f"{y:04d}-{m:02d}"
+        if key in decision_map:
+            current_rate = decision_map[key]
+        result[key] = round(current_rate, 2)
+        m += 1
+        if m > 12:
+            m = 1
+            y += 1
+    return result
+
+
+def fetch_boe_bank_rate():
+    """BoE Bank Rate decisions (hardcoded)."""
+    decisions = [
+        (2016, 8, 0.25),
+        (2017, 11, 0.50),
+        (2018, 8, 0.75),
+        (2020, 3, 0.10),
+        (2021, 12, 0.25),
+        (2022, 2, 0.50),
+        (2022, 3, 0.75),
+        (2022, 5, 1.00),
+        (2022, 6, 1.25),
+        (2022, 8, 1.75),
+        (2022, 9, 2.25),
+        (2022, 11, 3.00),
+        (2022, 12, 3.50),
+        (2023, 2, 4.00),
+        (2023, 3, 4.25),
+        (2023, 5, 4.50),
+        (2023, 6, 5.00),
+        (2023, 8, 5.25),
+        (2024, 8, 5.00),
+        (2024, 11, 4.75),
+        (2025, 2, 4.50),
+        (2025, 5, 4.25),
+    ]
+    return build_rate_step_function(decisions, pre_rate=0.50)
+
+
+def fetch_rba_cash_rate():
+    """RBA Cash Rate Target decisions (hardcoded)."""
+    decisions = [
+        (2016, 5, 1.75),
+        (2016, 8, 1.50),
+        (2019, 6, 1.25),
+        (2019, 7, 1.00),
+        (2019, 10, 0.75),
+        (2020, 3, 0.25),
+        (2020, 11, 0.10),
+        (2022, 5, 0.35),
+        (2022, 6, 0.85),
+        (2022, 7, 1.35),
+        (2022, 8, 1.85),
+        (2022, 9, 2.35),
+        (2022, 10, 2.60),
+        (2022, 11, 2.85),
+        (2022, 12, 3.10),
+        (2023, 2, 3.35),
+        (2023, 3, 3.60),
+        (2023, 5, 3.85),
+        (2023, 6, 4.10),
+        (2023, 11, 4.35),
+        (2025, 2, 4.10),
+        (2025, 5, 3.85),
+        (2025, 8, 3.60),
+        (2026, 2, 3.85),
+        (2026, 3, 4.10),
+    ]
+    return build_rate_step_function(decisions, pre_rate=2.00)
+
+
+def fetch_boj_policy_rate():
+    """BoJ Policy Rate decisions (hardcoded)."""
+    decisions = [
+        (2016, 2, -0.10),
+        (2024, 3, 0.00),
+        (2024, 7, 0.25),
+        (2025, 1, 0.50),
+    ]
+    return build_rate_step_function(decisions, pre_rate=-0.10)
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  OECD SDMX API (CPI)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def fetch_oecd_cpi(country_code):
+    """Fetch CPI YoY from OECD SDMX API.
+    country_code: e.g. 'AUS', 'GBR'
+    """
+    url = (
+        "https://sdmx.oecd.org/public/rest/data/"
+        "OECD.SDD.TPS,DSD_PRICES@DF_PRICES_ALL,/"
+        f"{country_code}.M.N.CPI.PA._T.N.GY"
+        f"?startPeriod={START_DATE[:7]}"
+    )
+    text = fetch_url(url, accept="text/csv")
+    result = {}
+    for line in text.strip().split("\n")[1:]:
+        cols = line.split(",")
+        # TIME_PERIOD and OBS_VALUE positions
+        period = cols[9]   # TIME_PERIOD
+        value = cols[10]   # OBS_VALUE
+        if period.startswith("20") and value:
+            result[period] = round1(float(value))
+    return result
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  Build / merge country data
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -435,6 +566,152 @@ def update_eu():
     print(f"  期間: {labels[0]} ~ {labels[-1]}")
 
 
+def update_gb():
+    print("\n🇬🇧 United Kingdom")
+    print("  政策金利を生成中... (BoE Bank Rate)")
+    interest = fetch_boe_bank_rate()
+    print(f"    {len(interest)} ヶ月分生成")
+
+    print("  CPIを取得中... (FRED: GBRCPIALLMINMEI, YoY変換)")
+    cpi = fetch_fred("GBRCPIALLMINMEI", units="pc1")
+    print(f"    {len(cpi)} ヶ月分取得")
+
+    print("  失業率を取得中... (FRED: LRHUTTTTGBM156S)")
+    unemployment = fetch_fred("LRHUTTTTGBM156S")
+    print(f"    {len(unemployment)} ヶ月分取得")
+
+    labels = common_labels(interest, cpi, unemployment)
+    ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, cpi, unemployment)
+    labels, (ir_arr, cpi_arr, unemp_arr) = trim_labels(labels, ir_arr, cpi_arr, unemp_arr)
+
+    data = {
+        "country": "United Kingdom",
+        "code": "gb",
+        "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
+        "sources": {
+            "interestRate": "Bank of England (Bank Rate)",
+            "cpi": "ONS (CPI 前年同月比)",
+            "unemployment": "ONS (Labour Force Survey)"
+        },
+        "labels": labels,
+        "interestRate": ir_arr,
+        "cpi": cpi_arr,
+        "unemployment": unemp_arr
+    }
+    save_json("gb", data)
+    print(f"  期間: {labels[0]} ~ {labels[-1]}")
+
+
+def fetch_au_cpi():
+    """Fetch Australia CPI: OECD monthly + FRED quarterly (forward-filled)."""
+    # 1) Quarterly from FRED, forward-fill to monthly
+    quarterly = fetch_fred("AUSCPIALLQINMEI", units="pc1")
+    monthly = {}
+    for label, val in sorted(quarterly.items()):
+        if val is None:
+            continue
+        y, m = label.split("-")
+        y, m = int(y), int(m)
+        # Forward-fill quarter value to 3 months
+        for offset in range(3):
+            nm = m + offset
+            ny = y
+            if nm > 12:
+                nm -= 12
+                ny += 1
+            key = f"{ny:04d}-{nm:02d}"
+            monthly[key] = round1(val)
+
+    # 2) Overlay with OECD monthly (more accurate, but limited period)
+    try:
+        oecd = fetch_oecd_cpi("AUS")
+        monthly.update(oecd)
+        print(f"    OECD月次: {len(oecd)} ヶ月分")
+    except Exception as e:
+        print(f"    OECD月次: [エラー] {e}")
+
+    return monthly
+
+
+def update_au():
+    print("\n🇦🇺 Australia")
+    print("  政策金利を生成中... (RBA Cash Rate Target)")
+    interest = fetch_rba_cash_rate()
+    print(f"    {len(interest)} ヶ月分生成")
+
+    print("  CPIを取得中... (FRED四半期 + OECD月次)")
+    try:
+        cpi = fetch_au_cpi()
+        print(f"    合計: {len(cpi)} ヶ月分")
+    except Exception as e:
+        print(f"    [エラー] {e}")
+        cpi = {}
+        existing = load_existing("au")
+        if existing:
+            cpi = {l: v for l, v in zip(existing["labels"], existing["cpi"])}
+            print(f"    既存データを維持 ({len(cpi)} ヶ月分)")
+
+    print("  失業率を取得中... (FRED: LRHUTTTTAUM156S)")
+    unemployment = fetch_fred("LRHUTTTTAUM156S")
+    print(f"    {len(unemployment)} ヶ月分取得")
+
+    labels = common_labels(interest, cpi, unemployment)
+    ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, cpi, unemployment)
+    labels, (ir_arr, cpi_arr, unemp_arr) = trim_labels(labels, ir_arr, cpi_arr, unemp_arr)
+
+    data = {
+        "country": "Australia",
+        "code": "au",
+        "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
+        "sources": {
+            "interestRate": "RBA (Cash Rate Target)",
+            "cpi": "OECD / ABS (CPI 前年同月比)",
+            "unemployment": "ABS (Labour Force Survey)"
+        },
+        "labels": labels,
+        "interestRate": ir_arr,
+        "cpi": cpi_arr,
+        "unemployment": unemp_arr
+    }
+    save_json("au", data)
+    print(f"  期間: {labels[0]} ~ {labels[-1]}")
+
+
+def update_jp():
+    print("\n🇯🇵 Japan")
+    print("  政策金利を生成中... (BoJ Policy Rate)")
+    interest = fetch_boj_policy_rate()
+    print(f"    {len(interest)} ヶ月分生成")
+
+    print("  CPI: 現在利用可能な無料APIなし（FRED廃止済み）")
+    cpi = {}
+
+    print("  失業率を取得中... (FRED: LRHUTTTTJPM156S)")
+    unemployment = fetch_fred("LRHUTTTTJPM156S")
+    print(f"    {len(unemployment)} ヶ月分取得")
+
+    labels = common_labels(interest, cpi, unemployment)
+    ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, cpi, unemployment)
+    labels, (ir_arr, cpi_arr, unemp_arr) = trim_labels(labels, ir_arr, cpi_arr, unemp_arr)
+
+    data = {
+        "country": "Japan",
+        "code": "jp",
+        "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
+        "sources": {
+            "interestRate": "日本銀行 (政策金利)",
+            "cpi": "総務省統計局 (CPI 前年同月比) ※現在未取得",
+            "unemployment": "総務省統計局 (労働力調査)"
+        },
+        "labels": labels,
+        "interestRate": ir_arr,
+        "cpi": cpi_arr,
+        "unemployment": unemp_arr
+    }
+    save_json("jp", data)
+    print(f"  期間: {labels[0]} ~ {labels[-1]}")
+
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  Main
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -451,16 +728,22 @@ def main():
     print("=" * 50)
 
     # Select countries to update
-    targets = sys.argv[1:] if len(sys.argv) > 1 else ["us", "ca", "eu"]
+    all_countries = ["us", "ca", "eu", "gb", "au", "jp"]
+    targets = sys.argv[1:] if len(sys.argv) > 1 else all_countries
+
+    updaters = {
+        "us": update_us,
+        "ca": update_ca,
+        "eu": update_eu,
+        "gb": update_gb,
+        "au": update_au,
+        "jp": update_jp,
+    }
 
     for target in targets:
         try:
-            if target == "us":
-                update_us()
-            elif target == "ca":
-                update_ca()
-            elif target == "eu":
-                update_eu()
+            if target in updaters:
+                updaters[target]()
             else:
                 print(f"\n[スキップ] 未対応の国コード: {target}")
         except Exception as e:
