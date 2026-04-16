@@ -565,9 +565,14 @@ def update_gb():
             interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
             print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
-    print("  CPIを取得中... (FRED: GBRCPIALLMINMEI, YoY変換)")
-    cpi = fetch_fred("GBRCPIALLMINMEI", units="pc1")
-    print(f"    {len(cpi)} ヶ月分取得")
+    print("  CPIを取得中... (OECD: GBR CPI YoY)")
+    try:
+        cpi = fetch_oecd_cpi("GBR")
+        print(f"    {len(cpi)} ヶ月分取得")
+    except Exception as e:
+        print(f"    OECD [エラー] {e}, FREDにフォールバック")
+        cpi = fetch_fred("GBRCPIALLMINMEI", units="pc1")
+        print(f"    {len(cpi)} ヶ月分取得 (FRED)")
 
     print("  失業率を取得中... (FRED: LRHUTTTTGBM156S)")
     unemployment = fetch_fred("LRHUTTTTGBM156S")
@@ -583,7 +588,7 @@ def update_gb():
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
             "interestRate": "Bank of England (Bank Rate)",
-            "cpi": "ONS (CPI 前年同月比)",
+            "cpi": "OECD (CPI 前年同月比)",
             "unemployment": "ONS (Labour Force Survey)"
         },
         "labels": labels,
