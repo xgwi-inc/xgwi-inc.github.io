@@ -411,42 +411,44 @@
 
   <script>
     // ── Event Data: April 2026 (JST) ──
+    // Sources: BLS, FRED, Eurostat, ECB, ONS, BoE, StatCan, BoC, ABS, RBA, BoJ, 総務省
     const EVENTS = [
-      // Apr 3
+      // Apr 1 (Wed)
+      { day: 1, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'unemp', label: '失業率' },
+      // Apr 3 (Fri)
       { day: 3, time: '21:30', country: 'us', flag: '🇺🇸', type: 'unemp', label: '雇用統計（失業率）' },
-      // Apr 8
-      { day: 8, time: '19:00', country: 'eu', flag: '🇪🇺', type: 'ppi', label: 'PPI' },
-      // Apr 10
+      // Apr 8 (Wed)
+      { day: 8, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'ppi', label: 'PPI' },
+      // Apr 10 (Fri)
       { day: 10, time: '08:50', country: 'jp', flag: '🇯🇵', type: 'ppi', label: 'CGPI（企業物価指数）' },
+      { day: 10, time: '21:30', country: 'us', flag: '🇺🇸', type: 'cpi', label: 'CPI' },
       { day: 10, time: '21:30', country: 'ca', flag: '🇨🇦', type: 'unemp', label: '雇用統計（失業率）' },
-      // Apr 11
-      { day: 11, time: '21:30', country: 'us', flag: '🇺🇸', type: 'cpi', label: 'CPI' },
-      // Apr 14
+      // Apr 14 (Tue)
       { day: 14, time: '21:30', country: 'us', flag: '🇺🇸', type: 'ppi', label: 'PPI' },
-      // Apr 16
-      { day: 16, time: '20:00', country: 'eu', flag: '🇪🇺', type: 'cpi', label: 'HICP（確報値）' },
-      // Apr 20
+      // Apr 16 (Thu) — today
+      { day: 16, time: '10:30', country: 'au', flag: '🇦🇺', type: 'unemp', label: '雇用統計（失業率）' },
+      { day: 16, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'cpi', label: 'HICP（確報値）' },
+      // Apr 20 (Mon)
       { day: 20, time: '21:30', country: 'ca', flag: '🇨🇦', type: 'cpi', label: 'CPI' },
-      // Apr 21
+      // Apr 21 (Tue)
       { day: 21, time: '15:00', country: 'gb', flag: '🇬🇧', type: 'unemp', label: '雇用統計（失業率）' },
-      // Apr 22
-      { day: 22, time: '15:00', country: 'gb', flag: '🇬🇧', type: 'cpi', label: 'CPI' },
+      // Apr 22 (Wed)
       { day: 22, time: '15:00', country: 'gb', flag: '🇬🇧', type: 'ppi', label: 'PPI' },
-      // Apr 23
-      { day: 23, time: '10:30', country: 'au', flag: '🇦🇺', type: 'unemp', label: '雇用統計（失業率）' },
+      // Apr 23 (Thu)
       { day: 23, time: '21:30', country: 'ca', flag: '🇨🇦', type: 'ppi', label: 'IPPI（鉱工業製品価格）' },
-      // Apr 28
-      { day: 28, time: '08:30', country: 'jp', flag: '🇯🇵', type: 'unemp', label: '失業率' },
+      // Apr 24 (Fri)
+      { day: 24, time: '08:50', country: 'jp', flag: '🇯🇵', type: 'ppi', label: 'サービス業PPI' },
+      // Apr 28 (Tue) — BoJ MPM Day 2
       { day: 28, time: '12:00', country: 'jp', flag: '🇯🇵', type: 'rate', label: '日銀 金融政策決定会合' },
-      // Apr 29
+      // Apr 29 (Wed)
       { day: 29, time: '10:30', country: 'au', flag: '🇦🇺', type: 'cpi', label: 'CPI（月次）' },
       { day: 29, time: '22:45', country: 'ca', flag: '🇨🇦', type: 'rate', label: 'BoC 政策金利発表' },
-      // Apr 30 (FOMC is 3:00 JST = after midnight of Apr 29 ET)
+      // Apr 30 (Thu) — FOMC is 3:00 JST = 2:00 PM ET Apr 29
       { day: 30, time: '03:00', country: 'us', flag: '🇺🇸', type: 'rate', label: 'FOMC 政策金利発表' },
-      { day: 30, time: '19:00', country: 'eu', flag: '🇪🇺', type: 'unemp', label: '失業率' },
+      { day: 30, time: '10:30', country: 'au', flag: '🇦🇺', type: 'ppi', label: '貿易物価指数' },
+      { day: 30, time: '18:00', country: 'eu', flag: '🇪🇺', type: 'cpi', label: 'HICP速報値（4月）' },
       { day: 30, time: '20:00', country: 'gb', flag: '🇬🇧', type: 'rate', label: 'BoE 政策金利発表' },
       { day: 30, time: '21:15', country: 'eu', flag: '🇪🇺', type: 'rate', label: 'ECB 政策金利発表' },
-      { day: 30, time: '23:00', country: 'eu', flag: '🇪🇺', type: 'cpi', label: 'HICP速報値（4月）' },
     ];
 
     const TODAY = 16; // April 16, 2026
