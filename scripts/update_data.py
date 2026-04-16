@@ -263,32 +263,6 @@ def fetch_boc_cpi():
 #  Central bank rate step functions
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def build_rate_step_function(decisions, pre_rate):
-    """Build monthly step-function series from central bank decision dates.
-    decisions: list of (year, month, rate) tuples, sorted chronologically.
-    pre_rate: rate before the first decision in the list.
-    """
-    current_rate = pre_rate
-    decision_map = {}
-    for y, m, r in decisions:
-        key = f"{y:04d}-{m:02d}"
-        decision_map[key] = r
-
-    result = {}
-    now = datetime.now()
-    y, m = 2016, 1
-    while (y, m) <= (now.year, now.month):
-        key = f"{y:04d}-{m:02d}"
-        if key in decision_map:
-            current_rate = decision_map[key]
-        result[key] = round(current_rate, 2)
-        m += 1
-        if m > 12:
-            m = 1
-            y += 1
-    return result
-
-
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  e-Stat Dashboard API (Japan CPI)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -326,76 +300,50 @@ def fetch_estat_cpi():
     return result
 
 
-def fetch_boe_bank_rate():
-    """BoE Bank Rate decisions (hardcoded)."""
-    decisions = [
-        (2016, 8, 0.25),
-        (2017, 11, 0.50),
-        (2018, 8, 0.75),
-        (2020, 3, 0.10),
-        (2021, 12, 0.25),
-        (2022, 2, 0.50),
-        (2022, 3, 0.75),
-        (2022, 5, 1.00),
-        (2022, 6, 1.25),
-        (2022, 8, 1.75),
-        (2022, 9, 2.25),
-        (2022, 11, 3.00),
-        (2022, 12, 3.50),
-        (2023, 2, 4.00),
-        (2023, 3, 4.25),
-        (2023, 5, 4.50),
-        (2023, 6, 5.00),
-        (2023, 8, 5.25),
-        (2024, 8, 5.00),
-        (2024, 11, 4.75),
-        (2025, 2, 4.50),
-        (2025, 5, 4.25),
-    ]
-    return build_rate_step_function(decisions, pre_rate=0.50)
+def fetch_bis_policy_rate(country_code):
+    """Fetch central bank policy rate from BIS SDMX API (no key needed).
+    Daily data -> extract last valid value per month.
+    country_code: ISO 2-letter code (GB, AU, JP)
+    """
+    import ssl
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
 
+    url = (
+        f"https://stats.bis.org/api/v2/data/dataflow/BIS/WS_CBPOL/1.0/"
+        f"D.{country_code}?startPeriod={START_DATE[:7]}"
+    )
+    req = Request(url, headers={"User-Agent": "Mozilla/5.0 (economic-data-updater)"})
+    with urlopen(req, timeout=60, context=ctx) as resp:
+        xml_text = resp.read().decode("utf-8")
 
-def fetch_rba_cash_rate():
-    """RBA Cash Rate Target decisions (hardcoded)."""
-    decisions = [
-        (2016, 5, 1.75),
-        (2016, 8, 1.50),
-        (2019, 6, 1.25),
-        (2019, 7, 1.00),
-        (2019, 10, 0.75),
-        (2020, 3, 0.25),
-        (2020, 11, 0.10),
-        (2022, 5, 0.35),
-        (2022, 6, 0.85),
-        (2022, 7, 1.35),
-        (2022, 8, 1.85),
-        (2022, 9, 2.35),
-        (2022, 10, 2.60),
-        (2022, 11, 2.85),
-        (2022, 12, 3.10),
-        (2023, 2, 3.35),
-        (2023, 3, 3.60),
-        (2023, 5, 3.85),
-        (2023, 6, 4.10),
-        (2023, 11, 4.35),
-        (2025, 2, 4.10),
-        (2025, 5, 3.85),
-        (2025, 8, 3.60),
-        (2026, 2, 3.85),
-        (2026, 3, 4.10),
-    ]
-    return build_rate_step_function(decisions, pre_rate=2.00)
+    # Parse daily observations -> monthly (last valid value per month)
+    monthly = {}
+    for m in re.finditer(
+        r'TIME_PERIOD="(\d{4}-\d{2})-\d{2}"\s+OBS_VALUE="(-?[\d.]+)"',
+        xml_text,
+    ):
+        period = m.group(1)
+        value = round(float(m.group(2)), 2)
+        monthly[period] = value  # later dates overwrite = month-end value
 
+    # Back-fill gap at the start: if data starts after START_DATE,
+    # fill earlier months with the earliest known rate
+    if monthly:
+        earliest_key = min(monthly)
+        earliest_val = monthly[earliest_key]
+        y, m = int(START_DATE[:4]), int(START_DATE[5:7])
+        ey, em = int(earliest_key[:4]), int(earliest_key[5:7])
+        while (y, m) < (ey, em):
+            key = f"{y:04d}-{m:02d}"
+            monthly[key] = earliest_val
+            m += 1
+            if m > 12:
+                m = 1
+                y += 1
 
-def fetch_boj_policy_rate():
-    """BoJ Policy Rate decisions (hardcoded)."""
-    decisions = [
-        (2016, 2, -0.10),
-        (2024, 3, 0.00),
-        (2024, 7, 0.25),
-        (2025, 1, 0.50),
-    ]
-    return build_rate_step_function(decisions, pre_rate=-0.10)
+    return monthly
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -605,9 +553,17 @@ def update_eu():
 
 def update_gb():
     print("\n🇬🇧 United Kingdom")
-    print("  政策金利を生成中... (BoE Bank Rate)")
-    interest = fetch_boe_bank_rate()
-    print(f"    {len(interest)} ヶ月分生成")
+    print("  政策金利を取得中... (BIS: BoE Bank Rate)")
+    try:
+        interest = fetch_bis_policy_rate("GB")
+        print(f"    {len(interest)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}")
+        interest = {}
+        existing = load_existing("gb")
+        if existing:
+            interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
+            print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
     print("  CPIを取得中... (FRED: GBRCPIALLMINMEI, YoY変換)")
     cpi = fetch_fred("GBRCPIALLMINMEI", units="pc1")
@@ -672,9 +628,17 @@ def fetch_au_cpi():
 
 def update_au():
     print("\n🇦🇺 Australia")
-    print("  政策金利を生成中... (RBA Cash Rate Target)")
-    interest = fetch_rba_cash_rate()
-    print(f"    {len(interest)} ヶ月分生成")
+    print("  政策金利を取得中... (BIS: RBA Cash Rate)")
+    try:
+        interest = fetch_bis_policy_rate("AU")
+        print(f"    {len(interest)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}")
+        interest = {}
+        existing = load_existing("au")
+        if existing:
+            interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
+            print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
     print("  CPIを取得中... (FRED四半期 + OECD月次)")
     try:
@@ -716,9 +680,17 @@ def update_au():
 
 def update_jp():
     print("\n🇯🇵 Japan")
-    print("  政策金利を生成中... (BoJ Policy Rate)")
-    interest = fetch_boj_policy_rate()
-    print(f"    {len(interest)} ヶ月分生成")
+    print("  政策金利を取得中... (BIS: BoJ Policy Rate)")
+    try:
+        interest = fetch_bis_policy_rate("JP")
+        print(f"    {len(interest)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}")
+        interest = {}
+        existing = load_existing("jp")
+        if existing:
+            interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
+            print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
     print("  CPIを取得中... (e-Stat Dashboard API)")
     try:
