@@ -12,7 +12,7 @@
   EU     - ECB Data API (HICP) + Eurostat API (unemployment) + ECB (deposit rate)
   UK     - FRED API (GBRCPIALLMINMEI, LRHUTTTTGBM156S) + BoE Bank Rate (hardcoded)
   AU     - OECD API (CPI) + FRED API (unemployment) + RBA Cash Rate (hardcoded)
-  JP     - FRED API (LRHUTTTTJPM156S) + BoJ Policy Rate (hardcoded) + CPI (未対応)
+  JP     - e-Stat Dashboard API (CPI) + FRED API (unemployment) + BoJ Policy Rate (hardcoded)
 """
 
 import json
@@ -286,6 +286,43 @@ def build_rate_step_function(decisions, pre_rate):
         if m > 12:
             m = 1
             y += 1
+    return result
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  e-Stat Dashboard API (Japan CPI)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def fetch_estat_cpi():
+    """Fetch Japan CPI YoY from e-Stat Dashboard API (no API key needed).
+    IndicatorCode 0703010501010030000 = 前年同月比 CPI総合 2020年基準
+    """
+    code = "0703010501010030000"
+    result = {}
+    now = datetime.now()
+    for year in range(2016, now.year + 1):
+        for month in range(1, 13):
+            if (year, month) > (now.year, now.month):
+                break
+            time_code = f"{year}{month:02d}00"
+            url = (
+                f"https://dashboard.e-stat.go.jp/api/1.0/Json/getData"
+                f"?Lang=JP&IndicatorCode={code}"
+                f"&Time={time_code}&RegionalRank=2&Cycle=1"
+                f"&IsSeasonalAdjustment=1&MetaGetFlg=N"
+            )
+            try:
+                data = fetch_json(url)
+                gs = data["GET_STATS"]
+                objs = gs.get("STATISTICAL_DATA", {}).get("DATA_INF", {}).get("DATA_OBJ", [])
+                if isinstance(objs, dict):
+                    objs = [objs]
+                if objs:
+                    val = float(objs[0]["VALUE"]["$"])
+                    key = f"{year:04d}-{month:02d}"
+                    result[key] = round1(val)
+            except Exception:
+                pass
     return result
 
 
@@ -683,8 +720,17 @@ def update_jp():
     interest = fetch_boj_policy_rate()
     print(f"    {len(interest)} ヶ月分生成")
 
-    print("  CPI: 現在利用可能な無料APIなし（FRED廃止済み）")
-    cpi = {}
+    print("  CPIを取得中... (e-Stat Dashboard API)")
+    try:
+        cpi = fetch_estat_cpi()
+        print(f"    {len(cpi)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}")
+        cpi = {}
+        existing = load_existing("jp")
+        if existing:
+            cpi = {l: v for l, v in zip(existing["labels"], existing["cpi"])}
+            print(f"    既存データを維持 ({len(cpi)} ヶ月分)")
 
     print("  失業率を取得中... (FRED: LRHUTTTTJPM156S)")
     unemployment = fetch_fred("LRHUTTTTJPM156S")
@@ -700,7 +746,7 @@ def update_jp():
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
             "interestRate": "日本銀行 (政策金利)",
-            "cpi": "総務省統計局 (CPI 前年同月比) ※現在未取得",
+            "cpi": "総務省統計局 (CPI 前年同月比)",
             "unemployment": "総務省統計局 (労働力調査)"
         },
         "labels": labels,
