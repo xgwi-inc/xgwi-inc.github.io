@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中央銀行関係者の発言 | 合同会社xgwi</title>
+  <meta name="description" content="ロイター日本語版 - 各国中央銀行関係者の発言に関する記事まとめ">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg: #fafaf9;
+      --color-surface: #ffffff;
+      --color-text: #1c1917;
+      --color-text-secondary: #57534e;
+      --color-text-tertiary: #a8a29e;
+      --color-accent: #1e3a5f;
+      --color-accent-light: #2d5a8e;
+      --color-border: #e7e5e4;
+      --color-border-light: #f0efed;
+      --font-jp: 'Noto Sans JP', sans-serif;
+      --font-en: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-jp);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ── */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(250, 250, 249, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--color-accent);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .logo span {
+      font-weight: 400;
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      margin-right: 0.5rem;
+      font-family: var(--font-jp);
+      letter-spacing: 0.08em;
+    }
+
+    nav a {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    nav a:hover {
+      color: var(--color-accent);
+    }
+
+    /* ── Main ── */
+    .page-hero {
+      padding: 8rem 2rem 3rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .page-hero .section-label {
+      font-family: var(--font-en);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-hero h1 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-hero p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.8;
+    }
+
+    .meta-info {
+      font-size: 0.8rem;
+      color: var(--color-text-tertiary);
+      margin-top: 0.5rem;
+    }
+
+    /* ── Article List ── */
+    .articles-section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+    }
+
+    .article-list {
+      list-style: none;
+    }
+
+    .article-item {
+      border-bottom: 1px solid var(--color-border-light);
+      transition: background 0.2s;
+    }
+
+    .article-item:first-child {
+      border-top: 1px solid var(--color-border-light);
+    }
+
+    .article-link {
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      padding: 1rem 0.75rem;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s;
+    }
+
+    .article-link:hover {
+      background: rgba(30, 58, 95, 0.03);
+    }
+
+    .article-date {
+      font-family: var(--font-en);
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--color-text-tertiary);
+      white-space: nowrap;
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+
+    .article-title {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+
+    .article-link:hover .article-title {
+      color: var(--color-accent);
+    }
+
+    .article-tag {
+      display: inline-block;
+      font-family: var(--font-en);
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      background: rgba(30, 58, 95, 0.06);
+      padding: 0.1rem 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+      letter-spacing: 0.04em;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--color-text-tertiary);
+      font-size: 0.9rem;
+    }
+
+    .error {
+      text-align: center;
+      padding: 3rem;
+      color: #b91c1c;
+      font-size: 0.9rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+    }
+
+    footer .footer-logo {
+      font-family: var(--font-en);
+      font-weight: 600;
+      color: var(--color-text-tertiary);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .header-inner {
+        padding: 0 1.25rem;
+      }
+
+      .logo span {
+        display: none;
+      }
+
+      nav a {
+        margin-left: 1.25rem;
+        font-size: 0.75rem;
+      }
+
+      .page-hero {
+        padding: 7rem 1.25rem 2rem;
+      }
+
+      .articles-section {
+        padding: 0 1.25rem 3rem;
+      }
+
+      .article-link {
+        flex-direction: column;
+        gap: 0.25rem;
+        padding: 0.85rem 0.5rem;
+      }
+
+      .article-date {
+        min-width: auto;
+        font-size: 0.72rem;
+      }
+
+      .article-title {
+        font-size: 0.85rem;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        padding: 2rem 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="logo"><span>合同会社</span>xgwi</a>
+      <nav>
+        <a href="index.html">ホーム</a>
+        <a href="data.html">経済指標</a>
+        <a href="cb-articles.html">CB発言</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="page-hero">
+    <div class="section-label">Central Bank Speeches &amp; Statements</div>
+    <h1>中央銀行関係者の発言</h1>
+    <p>ロイター日本語版による各国中央銀行関係者の発言・声明に関する記事（直近2週間）</p>
+    <div class="meta-info" id="meta-info"></div>
+  </div>
+
+  <!-- Articles -->
+  <div class="articles-section">
+    <div id="articles-container" class="loading">読み込み中...</div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">xgwi LLC</div>
+    <div>&copy; 2026 合同会社xgwi. All rights reserved.</div>
+  </footer>
+
+  <script>
+    // Central bank tag detection (Japanese)
+    const CB_TAGS = [
+      { pattern: /(日銀|植田|日本銀行)/i, tag: 'BOJ' },
+      { pattern: /(FRB|パウエル|連邦準備|米連邦|連銀)/i, tag: 'FED' },
+      { pattern: /(ECB|ラガルド|欧州中銀|欧州中央銀行)/i, tag: 'ECB' },
+      { pattern: /(英中銀|BOE|ベイリー|イングランド銀行)/i, tag: 'BOE' },
+      { pattern: /(RBA|豪中銀|豪準備銀行)/i, tag: 'RBA' },
+      { pattern: /(カナダ中銀|カナダ銀行|マックレム)/i, tag: 'BOC' },
+      { pattern: /(IMF|国際通貨基金)/i, tag: 'IMF' },
+    ];
+
+    function detectTags(title) {
+      const tags = [];
+      for (const { pattern, tag } of CB_TAGS) {
+        if (pattern.test(title)) {
+          tags.push(tag);
+        }
+      }
+      return tags;
+    }
+
+    function formatDate(isoStr) {
+      const d = new Date(isoStr);
+      const m = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, '0');
+      const h = d.getHours().toString().padStart(2, '0');
+      const min = d.getMinutes().toString().padStart(2, '0');
+      return `${m}/${day} ${h}:${min}`;
+    }
+
+    function formatLastUpdated(isoStr) {
+      const d = new Date(isoStr);
+      return d.toLocaleString('ja-JP', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+      });
+    }
+
+    async function loadArticles() {
+      const container = document.getElementById('articles-container');
+      const meta = document.getElementById('meta-info');
+
+      try {
+        const resp = await fetch('data/cb_articles.json');
+        if (!resp.ok) throw new Error('データの取得に失敗しました');
+        const data = await resp.json();
+
+        meta.textContent = `最終更新: ${formatLastUpdated(data.lastUpdated)} ／ ${data.count}件`;
+
+        if (!data.articles || data.articles.length === 0) {
+          container.innerHTML = '<div class="loading">記事が見つかりませんでした</div>';
+          return;
+        }
+
+        const ul = document.createElement('ul');
+        ul.className = 'article-list';
+
+        for (const article of data.articles) {
+          const li = document.createElement('li');
+          li.className = 'article-item';
+
+          const a = document.createElement('a');
+          a.className = 'article-link';
+          a.href = article.link;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+
+          const dateSpan = document.createElement('span');
+          dateSpan.className = 'article-date';
+          dateSpan.textContent = formatDate(article.pubDate);
+
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'article-title';
+
+          const tags = detectTags(article.title);
+          let tagHtml = '';
+          for (const tag of tags) {
+            tagHtml += `<span class="article-tag">${tag}</span>`;
+          }
+          titleSpan.innerHTML = tagHtml + article.title
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+          a.appendChild(dateSpan);
+          a.appendChild(titleSpan);
+          li.appendChild(a);
+          ul.appendChild(li);
+        }
+
+        container.innerHTML = '';
+        container.appendChild(ul);
+
+      } catch (err) {
+        container.innerHTML = `<div class="error">${err.message}</div>`;
+      }
+    }
+
+    loadArticles();
+  </script>
+
+</body>
+</html>
