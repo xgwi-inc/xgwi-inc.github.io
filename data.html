@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>経済指標 | 合同会社xgwi</title>
+  <meta name="description" content="主要国の金利・CPI・失業率の推移">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --color-bg: #fafaf9;
+      --color-surface: #ffffff;
+      --color-text: #1c1917;
+      --color-text-secondary: #57534e;
+      --color-text-tertiary: #a8a29e;
+      --color-accent: #1e3a5f;
+      --color-accent-light: #2d5a8e;
+      --color-border: #e7e5e4;
+      --color-border-light: #f0efed;
+      --font-jp: 'Noto Sans JP', sans-serif;
+      --font-en: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-jp);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ── */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(250, 250, 249, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--color-accent);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .logo span {
+      font-weight: 400;
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      margin-right: 0.5rem;
+      font-family: var(--font-jp);
+      letter-spacing: 0.08em;
+    }
+
+    nav a {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    nav a:hover {
+      color: var(--color-accent);
+    }
+
+    /* ── Main ── */
+    .page-hero {
+      padding: 8rem 2rem 3rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .page-hero .hero-eyebrow {
+      font-family: var(--font-en);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .page-hero h1 {
+      font-size: clamp(1.5rem, 3.5vw, 2rem);
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-hero p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.9;
+    }
+
+    /* ── Tabs ── */
+    .tab-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem 2rem;
+    }
+
+    .tab-list {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+
+    .tab-btn {
+      font-family: var(--font-jp);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-surface);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .tab-btn.active {
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      color: #fff;
+    }
+
+    /* ── Charts ── */
+    .charts-section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+    }
+
+    .chart-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .chart-meta {
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 280px;
+    }
+
+    .latest-values {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .latest-pill {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      border-left: 3px solid var(--pill-color, var(--color-accent));
+      padding-left: 0.75rem;
+      line-height: 1.6;
+    }
+
+    .latest-pill strong {
+      font-family: var(--font-en);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--pill-color, var(--color-accent));
+    }
+
+    .loading {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--color-text-tertiary);
+      font-size: 0.85rem;
+    }
+
+    .note {
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+      margin-top: 0.75rem;
+      line-height: 1.7;
+    }
+
+    /* ── Footer ── */
+    footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+    }
+
+    footer .footer-logo {
+      font-family: var(--font-en);
+      font-weight: 600;
+      color: var(--color-text-tertiary);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .header-inner { padding: 0 1.25rem; }
+      .logo span { display: none; }
+      nav a { margin-left: 1.25rem; font-size: 0.75rem; }
+      .page-hero { padding: 7rem 1.25rem 2rem; }
+      .tab-container { padding: 0 1.25rem 1.5rem; }
+      .charts-section { padding: 0 1.25rem 3rem; }
+      .chart-card { padding: 1.5rem; }
+      .chart-wrapper { height: 220px; }
+      footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        padding: 2rem 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="logo"><span>合同会社</span>xgwi</a>
+      <nav>
+        <a href="index.html">ホーム</a>
+        <a href="data.html">経済指標</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="page-hero">
+    <div class="hero-eyebrow">Economic Indicators</div>
+    <h1>経済指標データ</h1>
+    <p>主要国の政策金利・消費者物価指数（CPI）・失業率の月次推移を可視化しています。</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-container">
+    <div class="tab-list" id="country-tabs">
+      <button class="tab-btn active" data-country="us">United States</button>
+      <button class="tab-btn" data-country="ca">Canada</button>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-section" id="charts-area">
+    <div class="loading">データを読み込んでいます...</div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">xgwi LLC</div>
+    <div>&copy; 2026 合同会社xgwi. All rights reserved.</div>
+  </footer>
+
+  <script>
+    const COUNTRIES = [
+      { code: 'us', name: 'United States' },
+      { code: 'ca', name: 'Canada' }
+    ];
+
+    const dataCache = {};
+    let chartInstances = [];
+
+    // ── Tab switching ──
+    document.getElementById('country-tabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadCountry(btn.dataset.country);
+    });
+
+    // ── Load country data ──
+    async function loadCountry(code) {
+      const area = document.getElementById('charts-area');
+
+      if (dataCache[code]) {
+        renderCharts(dataCache[code]);
+        return;
+      }
+
+      area.innerHTML = '<div class="loading">データを読み込んでいます...</div>';
+
+      try {
+        const res = await fetch(`data/${code}.json`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        dataCache[code] = data;
+        renderCharts(data);
+      } catch (err) {
+        area.innerHTML = `<div class="loading">データの読み込みに失敗しました。</div>`;
+        console.error(err);
+      }
+    }
+
+    // ── Helpers ──
+    function getLatest(values, labels) {
+      const lastVal = [...values].reverse().find(v => v !== null);
+      const lastIdx = values.length - 1 - [...values].reverse().findIndex(v => v !== null);
+      return { value: lastVal, date: labels[lastIdx] };
+    }
+
+    function makeXTicks(formatLabels) {
+      return {
+        font: { family: "'DM Sans', sans-serif", size: 11 },
+        color: '#a8a29e',
+        maxTicksLimit: 11,
+        callback: function(value, index) {
+          const label = formatLabels[index];
+          return label && label.endsWith('/01') ? label.slice(0, 4) : '';
+        }
+      };
+    }
+
+    function makeYTicks(unit) {
+      return {
+        font: { family: "'DM Sans', sans-serif", size: 11 },
+        color: '#a8a29e',
+        callback: (v) => v + unit
+      };
+    }
+
+    const tooltipStyle = {
+      backgroundColor: '#1c1917',
+      titleFont: { family: "'DM Sans', sans-serif", size: 12 },
+      bodyFont: { family: "'DM Sans', sans-serif", size: 13, weight: '600' },
+      padding: 10,
+      cornerRadius: 6
+    };
+
+    function makeDataset(values, color, colorLight, label) {
+      return {
+        label: label,
+        data: values,
+        borderColor: color,
+        backgroundColor: colorLight,
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointBackgroundColor: color,
+        tension: 0.3,
+        fill: true,
+        spanGaps: true
+      };
+    }
+
+    // ── Render charts ──
+    function renderCharts(data) {
+      const area = document.getElementById('charts-area');
+      chartInstances.forEach(c => c.destroy());
+      chartInstances = [];
+
+      const formatLabels = data.labels.map(l => {
+        const [y, m] = l.split('-');
+        return `${y}/${m}`;
+      });
+
+      const rateLatest = getLatest(data.interestRate, data.labels);
+      const cpiLatest = getLatest(data.cpi, data.labels);
+      const unempLatest = getLatest(data.unemployment, data.labels);
+      const hasNull = data.cpi.includes(null) || data.unemployment.includes(null);
+
+      area.innerHTML = `
+        <div class="chart-card">
+          <h3>政策金利 / CPI（前年比）</h3>
+          <div class="chart-meta">出典: ${data.sources.interestRate} / ${data.sources.cpi}</div>
+          <div class="latest-values">
+            <span class="latest-pill" style="--pill-color: #1e3a5f;">政策金利 <strong>${rateLatest.value}%</strong>（${rateLatest.date}）</span>
+            <span class="latest-pill" style="--pill-color: #b45309;">CPI <strong>${cpiLatest.value}%</strong>（${cpiLatest.date}）</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-rate-cpi"></canvas>
+          </div>
+          ${hasNull ? '<div class="note">※ 一部データは政府機関の予算失効により欠損しています。</div>' : ''}
+        </div>
+        <div class="chart-card">
+          <h3>失業率</h3>
+          <div class="chart-meta">出典: ${data.sources.unemployment}</div>
+          <div class="latest-values">
+            <span class="latest-pill" style="--pill-color: #0f766e;">失業率 <strong>${unempLatest.value}%</strong>（${unempLatest.date}）</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chart-unemployment"></canvas>
+          </div>
+          ${data.unemployment.includes(null) ? '<div class="note">※ 一部データは政府機関の予算失効により欠損しています。</div>' : ''}
+        </div>
+      `;
+
+      // ── Chart 1: Interest Rate + CPI ──
+      const ctx1 = document.getElementById('chart-rate-cpi').getContext('2d');
+      chartInstances.push(new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: formatLabels,
+          datasets: [
+            makeDataset(data.interestRate, '#1e3a5f', 'rgba(30, 58, 95, 0.06)', '政策金利'),
+            makeDataset(data.cpi, '#b45309', 'rgba(180, 83, 9, 0.06)', 'CPI（前年比）')
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              align: 'end',
+              labels: {
+                font: { family: "'Noto Sans JP', sans-serif", size: 12 },
+                color: '#57534e',
+                usePointStyle: true,
+                pointStyle: 'line',
+                boxWidth: 24,
+                padding: 16
+              }
+            },
+            tooltip: {
+              ...tooltipStyle,
+              callbacks: {
+                label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y}%`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: makeXTicks(formatLabels) },
+            y: { grid: { color: '#f0efed' }, ticks: makeYTicks('%') }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      }));
+
+      // ── Chart 2: Unemployment ──
+      const ctx2 = document.getElementById('chart-unemployment').getContext('2d');
+      chartInstances.push(new Chart(ctx2, {
+        type: 'line',
+        data: {
+          labels: formatLabels,
+          datasets: [
+            makeDataset(data.unemployment, '#0f766e', 'rgba(15, 118, 110, 0.08)', '失業率')
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              ...tooltipStyle,
+              callbacks: {
+                label: (ctx) => ` ${ctx.parsed.y}%`
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: makeXTicks(formatLabels) },
+            y: { grid: { color: '#f0efed' }, ticks: makeYTicks('%') }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      }));
+    }
+
+    // ── Init ──
+    loadCountry('us');
+  </script>
+
+</body>
+</html>
