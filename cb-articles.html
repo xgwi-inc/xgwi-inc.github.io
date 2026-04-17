@@ -489,7 +489,8 @@
         renderPage(1);
 
       } catch (err) {
-        container.innerHTML = `<div class="error">${err.message}</div>`;
+        const isLocal = location.protocol === 'file:';
+        container.innerHTML = `<div class="error">${err.message}${isLocal ? '<br><small>ローカルファイルでは fetch が制限されます。<a href="https://xgwi-inc.github.io/cb-articles.html" style="color:#60a5fa">こちら</a>からアクセスしてください。</small>' : ''}</div>`;
       }
     }
 

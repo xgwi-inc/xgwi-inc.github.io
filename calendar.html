@@ -597,8 +597,12 @@
         renderMonth(startMonth);
       })
       .catch(err => {
+        const isLocal = location.protocol === 'file:';
         document.getElementById('cal-grid').innerHTML =
-          '<div style="grid-column:1/-1;padding:2rem;text-align:center;color:#a8a29e">データの読み込みに失敗しました</div>';
+          '<div style="grid-column:1/-1;padding:2rem;text-align:center;color:#a8a29e">'
+          + 'データの読み込みに失敗しました'
+          + (isLocal ? '<br><small style="margin-top:0.5rem;display:inline-block">ローカルファイルでは fetch が制限されます。<a href="https://xgwi-inc.github.io/calendar.html" style="color:#60a5fa">こちら</a>からアクセスしてください。</small>' : '')
+          + '</div>';
       });
   </script>
 </body>

@@ -352,7 +352,8 @@
         dataCache[code] = data;
         renderCharts(data);
       } catch (err) {
-        area.innerHTML = `<div class="loading">データの読み込みに失敗しました。</div>`;
+        const isLocal = location.protocol === 'file:';
+        area.innerHTML = `<div class="loading">データの読み込みに失敗しました。${isLocal ? '<br><small>ローカルファイルでは fetch が制限されます。<a href="https://xgwi-inc.github.io/data.html" style="color:#60a5fa">こちら</a>からアクセスしてください。</small>' : ''}</div>`;
         console.error(err);
       }
     }
