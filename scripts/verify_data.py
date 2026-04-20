@@ -38,44 +38,70 @@ def last_valid(labels, arr):
     return None
 
 
+def classify(stale, warn=STALE_WARN, fail=STALE_FAIL):
+    """Return 'OK' | 'WARN' | 'FAIL' for a stale-in-months value."""
+    if stale > fail:
+        return "FAIL"
+    if stale > warn:
+        return "WARN"
+    return "OK"
+
+
+def verify(data_dir, current, countries=COUNTRIES, indicators=INDICATORS):
+    """Core verification logic (no I/O side effects on exit).
+
+    Returns: (rows, failures, warnings)
+      rows: list of dicts {country, indicator, latest, stale, status}
+      failures / warnings: list of str descriptions
+    """
+    rows = []
+    failures = []
+    warnings = []
+    data_dir = Path(data_dir)
+    for code in countries:
+        path = data_dir / f"{code}.json"
+        if not path.exists():
+            failures.append(f"{code}: file missing")
+            rows.append({"country": code, "indicator": None, "latest": None,
+                         "stale": None, "status": "FAIL"})
+            continue
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        labels = d.get("labels", [])
+        for ind in indicators:
+            arr = d.get(ind, [])
+            if not arr or all(v is None for v in arr):
+                failures.append(f"{code}.{ind}: all None or empty")
+                rows.append({"country": code, "indicator": ind, "latest": None,
+                             "stale": None, "status": "FAIL"})
+                continue
+            latest = last_valid(labels, arr)
+            stale = months_between(latest, current)
+            status = classify(stale)
+            if status == "FAIL":
+                failures.append(f"{code}.{ind}: latest={latest} (>{STALE_FAIL}mo stale)")
+            elif status == "WARN":
+                warnings.append(f"{code}.{ind}: latest={latest} ({stale}mo stale)")
+            rows.append({"country": code, "indicator": ind, "latest": latest,
+                         "stale": stale, "status": status})
+    return rows, failures, warnings
+
+
 def main():
     now = datetime.now()
     current = f"{now.year:04d}-{now.month:02d}"
-
-    failures = []
-    warnings = []
 
     print(f"検証開始: 現在月 = {current}")
     print(f"  警告閾値: {STALE_WARN} ヶ月 / 失敗閾値: {STALE_FAIL} ヶ月\n")
     print(f"{'Country':8s} {'Indicator':16s} {'Latest':10s} {'Stale(mo)':10s} Status")
     print("-" * 65)
 
-    for code in COUNTRIES:
-        path = DATA_DIR / f"{code}.json"
-        if not path.exists():
-            failures.append(f"{code}: file missing")
-            print(f"{code:8s} {'(file missing)':16s}")
-            continue
-        with open(path, encoding="utf-8") as f:
-            d = json.load(f)
-        labels = d.get("labels", [])
-        for ind in INDICATORS:
-            arr = d.get(ind, [])
-            if not arr or all(v is None for v in arr):
-                failures.append(f"{code}.{ind}: all None or empty")
-                print(f"{code:8s} {ind:16s} {'(empty)':10s} {'-':10s} FAIL")
-                continue
-            latest = last_valid(labels, arr)
-            stale = months_between(latest, current)
-            if stale > STALE_FAIL:
-                status = "FAIL"
-                failures.append(f"{code}.{ind}: latest={latest} (>{STALE_FAIL}mo stale)")
-            elif stale > STALE_WARN:
-                status = "WARN"
-                warnings.append(f"{code}.{ind}: latest={latest} ({stale}mo stale)")
-            else:
-                status = "OK"
-            print(f"{code:8s} {ind:16s} {latest:10s} {stale:<10d} {status}")
+    rows, failures, warnings = verify(DATA_DIR, current)
+    for r in rows:
+        ind = r["indicator"] or "(file missing)"
+        latest = r["latest"] or "(empty)"
+        stale = "-" if r["stale"] is None else str(r["stale"])
+        print(f"{r['country']:8s} {ind:16s} {latest:10s} {stale:<10s} {r['status']}")
 
     print()
     if warnings:
