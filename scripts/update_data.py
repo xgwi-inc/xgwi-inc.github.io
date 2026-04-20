@@ -551,6 +551,42 @@ def update_eu():
     print(f"  期間: {labels[0]} ~ {labels[-1]}")
 
 
+MONTH_ABBR_TO_NUM = {
+    'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6,
+    'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12,
+}
+
+
+def fetch_ons_unemployment():
+    """Fetch UK unemployment rate (aged 16+, SA) from ONS timeseries MGSX.
+    Monthly value is the 3-month rolling average centered on that month.
+    Typically ~1 month fresher than FRED's OECD harmonized series.
+    """
+    url = "https://www.ons.gov.uk/employmentandlabourmarket/peoplenotinwork/unemployment/timeseries/mgsx/lms/data"
+    req = Request(url, headers={"User-Agent": "Mozilla/5.0 (economic-data-updater)", "Accept": "application/json"})
+    with urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+
+    result = {}
+    for m in data.get("months", []):
+        # date format: "2025 DEC"
+        parts = m.get("date", "").split()
+        if len(parts) != 2:
+            continue
+        year_str, mon_abbr = parts
+        if not year_str.isdigit() or mon_abbr not in MONTH_ABBR_TO_NUM:
+            continue
+        year = int(year_str)
+        if year < 2016:
+            continue
+        key = f"{year:04d}-{MONTH_ABBR_TO_NUM[mon_abbr]:02d}"
+        try:
+            result[key] = round1(float(m["value"]))
+        except (ValueError, KeyError):
+            continue
+    return result
+
+
 def update_gb():
     print("\n🇬🇧 United Kingdom")
     print("  政策金利を取得中... (BIS: BoE Bank Rate)")
@@ -574,9 +610,14 @@ def update_gb():
         cpi = fetch_fred("GBRCPIALLMINMEI", units="pc1")
         print(f"    {len(cpi)} ヶ月分取得 (FRED)")
 
-    print("  失業率を取得中... (FRED: LRHUTTTTGBM156S)")
-    unemployment = fetch_fred("LRHUTTTTGBM156S")
-    print(f"    {len(unemployment)} ヶ月分取得")
+    print("  失業率を取得中... (ONS: MGSX)")
+    try:
+        unemployment = fetch_ons_unemployment()
+        print(f"    {len(unemployment)} ヶ月分取得")
+    except Exception as e:
+        print(f"    ONS [エラー] {e}, FREDにフォールバック")
+        unemployment = fetch_fred("LRHUTTTTGBM156S")
+        print(f"    {len(unemployment)} ヶ月分取得 (FRED)")
 
     labels = common_labels(interest, cpi, unemployment)
     ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, cpi, unemployment)
@@ -589,7 +630,7 @@ def update_gb():
         "sources": {
             "interestRate": "Bank of England (Bank Rate)",
             "cpi": "OECD (CPI 前年同月比)",
-            "unemployment": "ONS (Labour Force Survey)"
+            "unemployment": "ONS (Labour Force Survey, MGSX)"
         },
         "labels": labels,
         "interestRate": ir_arr,
