@@ -1,7 +1,7 @@
 {
   "country": "Canada",
   "code": "ca",
-  "lastUpdated": "2026-04-16",
+  "lastUpdated": "2026-04-20",
   "sources": {
     "interestRate": "Bank of Canada (Overnight Target Rate)",
     "cpi": "Bank of Canada / Statistics Canada (CPI 前年同月比)",

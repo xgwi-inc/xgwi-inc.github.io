@@ -1,11 +1,11 @@
 {
   "country": "United Kingdom",
   "code": "gb",
-  "lastUpdated": "2026-04-16",
+  "lastUpdated": "2026-04-20",
   "sources": {
     "interestRate": "Bank of England (Bank Rate)",
     "cpi": "OECD (CPI 前年同月比)",
-    "unemployment": "ONS (Labour Force Survey)"
+    "unemployment": "ONS (Labour Force Survey, MGSX)"
   },
   "labels": [
     "2016-01",
@@ -505,7 +505,7 @@
     5.1,
     5.1,
     5.2,
-    null,
+    5.2,
     null,
     null,
     null,

@@ -1,7 +1,7 @@
 {
   "country": "Japan",
   "code": "jp",
-  "lastUpdated": "2026-04-16",
+  "lastUpdated": "2026-04-20",
   "sources": {
     "interestRate": "日本銀行 (政策金利)",
     "cpi": "総務省統計局 (CPI 前年同月比)",

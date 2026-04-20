@@ -1,7 +1,7 @@
 {
   "country": "Australia",
   "code": "au",
-  "lastUpdated": "2026-04-16",
+  "lastUpdated": "2026-04-20",
   "sources": {
     "interestRate": "RBA (Cash Rate Target)",
     "cpi": "OECD / ABS (CPI 前年同月比)",

@@ -1,7 +1,7 @@
 {
   "country": "Euro Area",
   "code": "eu",
-  "lastUpdated": "2026-04-16",
+  "lastUpdated": "2026-04-20",
   "sources": {
     "interestRate": "ECB (Deposit Facility Rate)",
     "cpi": "Eurostat (HICP 前年同月比)",
