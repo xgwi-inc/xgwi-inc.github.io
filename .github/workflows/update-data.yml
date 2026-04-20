@@ -24,6 +24,9 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
         run: python scripts/update_data.py
 
+      - name: Verify data freshness
+        run: python scripts/verify_data.py
+
       - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"

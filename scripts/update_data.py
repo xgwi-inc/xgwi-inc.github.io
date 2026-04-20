@@ -35,13 +35,30 @@ FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
 #  Utility
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def fetch_url(url, accept=None):
-    headers = {"User-Agent": "Mozilla/5.0 (economic-data-updater)"}
+def fetch_url(url, accept=None, retries=3, backoff=2):
+    """Fetch a URL as text with retry-on-transient-error and gzip handling."""
+    import time
+    headers = {
+        "User-Agent": "Mozilla/5.0 (economic-data-updater)",
+        "Accept-Encoding": "identity",  # suppress gzip (Python urllib doesn't auto-decompress)
+    }
     if accept:
         headers["Accept"] = accept
-    req = Request(url, headers=headers)
-    with urlopen(req, timeout=30) as resp:
-        return resp.read().decode("utf-8")
+    last_err = None
+    for attempt in range(retries):
+        try:
+            req = Request(url, headers=headers)
+            with urlopen(req, timeout=60) as resp:
+                raw = resp.read()
+            if raw[:2] == b"\x1f\x8b":
+                import gzip
+                raw = gzip.decompress(raw)
+            return raw.decode("utf-8")
+        except Exception as e:
+            last_err = e
+            if attempt < retries - 1:
+                time.sleep(backoff * (attempt + 1))
+    raise last_err
 
 
 def fetch_json(url):
@@ -99,118 +116,57 @@ def fetch_fred(series_id, units="lin", start=START_DATE):
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#  ECB Data API (EU HICP)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-def fetch_ecb_hicp():
-    url = (
-        "https://data-api.ecb.europa.eu/service/data/"
-        "ICP/M.U2.N.000000.4.ANR"
-        f"?startPeriod={START_DATE[:7]}&format=csvdata"
-    )
-    text = fetch_url(url, accept="text/csv")
-    result = {}
-    for line in text.strip().split("\n")[1:]:  # skip header
-        cols = line.split(",")
-        period = cols[7]  # TIME_PERIOD
-        value = cols[8]   # OBS_VALUE
-        if period.startswith("20") and value:
-            result[period] = round1(float(value))
-    return result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#  Eurostat API (EU unemployment)
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-def fetch_eurostat_unemployment():
-    url = (
-        "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/"
-        "une_rt_m/M.SA.TOTAL.PC_ACT.T.EA20"
-        f"?startPeriod={START_DATE[:7]}"
-    )
-    xml_text = fetch_url(url)
-    result = {}
-    # Parse XML for ObsDimension (period) and ObsValue
-    for m in re.finditer(
-        r'ObsDimension value="(\d{4}-\d{2})".*?ObsValue value="([\d.]+)"',
-        xml_text,
-    ):
-        period, value = m.group(1), m.group(2)
-        result[period] = round1(float(value))
-    return result
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#  ECB deposit facility rate
+#  ECB Data API — policy rate step series (FM dataflow)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def fetch_ecb_deposit_rate():
-    """Fetch ECB key interest rates page and build monthly series."""
-    url = "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html"
-    html = fetch_url(url)
-
-    month_map = {
-        'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4,
-        'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8,
-        'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
-    }
-
-    # Parse table rows: cells = [year, "day Mon.", deposit_rate, mro_rate, ...]
-    decisions = []
-    current_year = None
-    rows = re.findall(r'<tr[^>]*>(.*?)</tr>', html, re.DOTALL)
-    for tr in rows:
-        cells = re.findall(r'<td[^>]*>(.*?)</td>', tr, re.DOTALL)
-        cells = [re.sub(r'<[^>]+>', '', c).strip()
-                 .replace('&nbsp;', '').replace('&#8722;', '-').replace('−', '-')
-                 for c in cells]
-        if len(cells) < 4:
-            continue
-
-        # First cell is year (may be empty if same year as previous row)
-        if cells[0].isdigit():
-            current_year = int(cells[0])
-        if current_year is None or current_year < 2014:
-            continue
-
-        # Second cell is date like "11 Jun." or "10 May"
-        date_match = re.match(r'(\d{1,2})\s+(\w{3})', cells[1])
-        if not date_match:
-            continue
-
-        day = int(date_match.group(1))
-        mon_str = date_match.group(2).rstrip('.')
-        if mon_str not in month_map:
-            continue
-        month = month_map[mon_str]
-
-        # Third cell is deposit facility rate
-        try:
-            rate = float(cells[2])
-        except ValueError:
-            continue
-
-        decisions.append((current_year, month, day, rate))
-
-    if not decisions:
-        print("  [警告] ECB金利データの取得に失敗。既存データを維持します。")
+    """ECB Deposit Facility Rate. FM dataflow emits one row per rate change.
+    Build month-end step series from 2016-01 onwards.
+    """
+    url = (
+        "https://data-api.ecb.europa.eu/service/data/FM/"
+        "B.U2.EUR.4F.KR.DFR.LEV?format=csvdata"
+    )
+    text = fetch_url(url, accept="text/csv")
+    # Each row: ...,TIME_PERIOD,OBS_VALUE,...
+    # Parse header to find column indices
+    lines = text.strip().split("\n")
+    header = lines[0].split(",")
+    try:
+        tp_idx = header.index("TIME_PERIOD")
+        ov_idx = header.index("OBS_VALUE")
+    except ValueError:
+        print("  [警告] ECB FM CSVヘッダー解析失敗")
         return None
 
-    # Sort chronologically
+    decisions = []
+    for line in lines[1:]:
+        cols = line.split(",")
+        if len(cols) <= max(tp_idx, ov_idx):
+            continue
+        date = cols[tp_idx]
+        val = cols[ov_idx]
+        if not date or not val:
+            continue
+        try:
+            rate = float(val)
+        except ValueError:
+            continue
+        decisions.append((date, rate))
+
+    if not decisions:
+        return None
+
     decisions.sort()
+    # Forward-fill to month-end starting from 2016-01
+    current_rate = decisions[0][1]
+    for date, rate in decisions:
+        if date[:7] < "2016-01":
+            current_rate = rate
 
-    # Build monthly series using rate at end of each month
-    pre_rate = decisions[0][3]
-    for y, m, d, r in decisions:
-        if (y, m) < (2016, 1):
-            pre_rate = r
-
-    current_rate = pre_rate
     decision_map = {}
-    for y, m, d, r in decisions:
-        key = f"{y:04d}-{m:02d}"
-        decision_map[key] = r
+    for date, rate in decisions:
+        decision_map[date[:7]] = rate
 
     result = {}
     now = datetime.now()
@@ -222,40 +178,182 @@ def fetch_ecb_deposit_rate():
         result[key] = round(current_rate, 2)
         m += 1
         if m > 12:
-            m = 1
-            y += 1
-
+            m, y = 1, y + 1
     return result
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#  Bank of Canada CPI
+#  Eurostat JSON-stat 2.0 helpers
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def fetch_boc_cpi():
-    """Fetch CPI YoY from Bank of Canada website."""
-    url = "https://www.bankofcanada.ca/rates/price-indexes/cpi/"
-    html = fetch_url(url)
+def fetch_eurostat_jsonstat(dataflow, params):
+    """Fetch an Eurostat JSON-stat 2.0 dataset and return {YYYY-MM: value}.
+    `params` is a dict of query params (e.g. geo=EA20, unit=...). The time
+    dimension is auto-detected.
+    """
+    qs = "&".join(f"{k}={v}" for k, v in params.items())
+    url = f"https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/{dataflow}?{qs}"
+    data = fetch_json(url)
+    # JSON-stat 2.0: find the time dimension
+    dims = data.get("dimension", {})
+    time_dim_name = None
+    for name, meta in dims.items():
+        role = data.get("role", {}).get("time", [])
+        if name in role or meta.get("label", "").lower() in ("time", "period"):
+            time_dim_name = name
+            break
+    if time_dim_name is None:
+        # fallback: use the last dimension listed in 'id'
+        ids = data.get("id", [])
+        time_dim_name = ids[-1] if ids else None
+    if not time_dim_name:
+        return {}
+    time_cat = dims[time_dim_name]["category"]["index"]
+    # index map: {period: idx}
+    if isinstance(time_cat, dict):
+        idx_map = time_cat
+    else:
+        idx_map = {p: i for i, p in enumerate(time_cat)}
 
-    result = {}
-    # HTML structure: <th>YYYY-MM</th><td>index</td><td>seasonal</td><td>YoY%</td>
-    # The YoY% is in the column with header "th-percentage th-totalcpi2"
-    pattern = re.compile(
-        r'(\d{4}-\d{2})</th>'
-        r"<td[^>]*>[\d.]+</td>"       # total CPI index
-        r"<td[^>]*>[\d.]+</td>"       # seasonal adjusted
-        r"<td[^>]*>([\-\d.]+)</td>"   # YoY percentage change
-    )
-    for m in pattern.finditer(html):
-        period = m.group(1)
-        value = float(m.group(2))
-        if period >= "2016-01":
-            result[period] = round1(value)
+    # Determine size of non-time dimensions so we can compute flat index.
+    # For single-point queries (all other dims fixed), size of others = 1.
+    # JSON-stat flat index = sum(idx_i * stride_i)
+    ids = data.get("id", [])
+    size = data.get("size", [])
+    strides = [1] * len(size)
+    for i in range(len(size) - 2, -1, -1):
+        strides[i] = strides[i + 1] * size[i + 1]
+    time_pos = ids.index(time_dim_name)
 
-    if not result:
-        print("  [警告] Bank of Canada CPIデータの取得に失敗。既存データを維持します。")
+    values = data.get("value", {})
+    # values may be dict {flat_idx_str: number} or list
+    def get_val(flat_idx):
+        if isinstance(values, dict):
+            return values.get(str(flat_idx))
+        if 0 <= flat_idx < len(values):
+            return values[flat_idx]
         return None
 
+    # Non-time dims are all singletons for our queries
+    result = {}
+    for period, t_idx in idx_map.items():
+        flat = t_idx * strides[time_pos]
+        v = get_val(flat)
+        if v is not None:
+            result[period] = float(v)
+    return result
+
+
+def fetch_eurostat_hicp_yoy():
+    """Euro Area HICP YoY%. Merge long-history table with fresh short-term table
+    (teicp000 is already rebased to 2025=100 and carries post-2025-12 data).
+    """
+    # Historical: prc_hicp_manr (YoY, pre-rebase, ends ~2025-12)
+    historical = fetch_eurostat_jsonstat(
+        "prc_hicp_manr",
+        {"coicop": "CP00", "geo": "EA20", "unit": "RCH_A", "sinceTimePeriod": "2016-01"},
+    )
+    # Fresh tail: teicp000 (YoY, post-rebase)
+    try:
+        fresh = fetch_eurostat_jsonstat(
+            "teicp000",
+            {"geo": "EA20", "unit": "PCH_M12"},
+        )
+    except Exception as e:
+        print(f"    teicp000 fetch failed: {e}")
+        fresh = {}
+
+    merged = {k: round1(v) for k, v in historical.items() if v is not None}
+    for k, v in fresh.items():
+        if v is None:
+            continue
+        merged[k] = round1(v)  # fresh wins in overlap
+    return merged
+
+
+def fetch_eurostat_unemployment_ea20():
+    """EA20 unemployment rate (seasonally adjusted, total)."""
+    return {
+        k: round1(v)
+        for k, v in fetch_eurostat_jsonstat(
+            "une_rt_m",
+            {
+                "geo": "EA20",
+                "age": "TOTAL",
+                "sex": "T",
+                "unit": "PC_ACT",
+                "s_adj": "SA",
+                "sinceTimePeriod": "2016-01",
+            },
+        ).items()
+        if v is not None
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  Bank of Canada Valet API
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def fetch_boc_valet(series_id, start=START_DATE):
+    """Fetch a BoC Valet series (daily) and collapse to monthly (last value per month)."""
+    url = (
+        f"https://www.bankofcanada.ca/valet/observations/{series_id}/json"
+        f"?start_date={start}"
+    )
+    data = fetch_json(url)
+    monthly = {}
+    for obs in data.get("observations", []):
+        date = obs.get("d", "")
+        if len(date) < 7:
+            continue
+        val = obs.get(series_id, {}).get("v")
+        if val in (None, ""):
+            continue
+        monthly[date[:7]] = float(val)  # later dates overwrite = month-end
+    return monthly
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  StatsCan WDS REST API
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def fetch_statcan_vector(vector_id, start=START_DATE):
+    """Fetch a StatsCan time series by vector ID (monthly).
+    Returns {YYYY-MM: float_value} (raw values, no transform).
+    """
+    end = datetime.now().strftime("%Y-%m-01")
+    url = (
+        "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVectorByReferencePeriodRange"
+        f"?vectorIds={vector_id}"
+        f"&startRefPeriod={start[:7]}-01"
+        f"&endReferencePeriod={end}"
+    )
+    data = fetch_json(url)
+    points = data[0]["object"]["vectorDataPoint"]
+    result = {}
+    for p in points:
+        ref = p.get("refPer", "")[:7]
+        val = p.get("value")
+        if ref and val is not None:
+            result[ref] = float(val)
+    return result
+
+
+def fetch_statcan_cpi_yoy():
+    """CPI All-items (vector 41690973) as YoY%. Fetch 13+ extra months for lookback."""
+    # Fetch 12 months earlier to enable YoY computation for the first target period.
+    y = int(START_DATE[:4]) - 1
+    m = int(START_DATE[5:7])
+    extended_start = f"{y:04d}-{m:02d}-01"
+    index = fetch_statcan_vector(41690973, start=extended_start)
+    result = {}
+    for period, val in index.items():
+        y, mo = period.split("-")
+        prev = f"{int(y)-1}-{mo}"
+        if prev in index and index[prev] not in (None, 0):
+            yoy = (val / index[prev] - 1) * 100
+            if period >= START_DATE[:7]:
+                result[period] = round1(yoy)
     return result
 
 
@@ -264,40 +362,115 @@ def fetch_boc_cpi():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#  e-Stat Dashboard API (Japan CPI)
+#  e-Stat Dashboard API (single-call for full history)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def fetch_estat_cpi():
-    """Fetch Japan CPI YoY from e-Stat Dashboard API (no API key needed).
-    IndicatorCode 0703010501010030000 = 前年同月比 CPI総合 2020年基準
+def fetch_estat_series(indicator_code, seasonal_code=None, start="2016-01"):
+    """Fetch a Japan e-Stat Dashboard indicator for the whole time range in one call.
+    seasonal_code: "1"=原数値, "2"=季節調整値. None = accept all.
+    Returns {YYYY-MM: float_value}.
     """
-    code = "0703010501010030000"
+    url = (
+        "https://dashboard.e-stat.go.jp/api/1.0/Json/getData"
+        f"?Lang=JP&IndicatorCode={indicator_code}"
+        "&RegionCode=00000&Cycle=1"
+    )
+    data = fetch_json(url)
+    objs = (
+        data.get("GET_STATS", {})
+            .get("STATISTICAL_DATA", {})
+            .get("DATA_INF", {})
+            .get("DATA_OBJ", [])
+    )
+    if isinstance(objs, dict):
+        objs = [objs]
     result = {}
-    now = datetime.now()
-    for year in range(2016, now.year + 1):
-        for month in range(1, 13):
-            if (year, month) > (now.year, now.month):
-                break
-            time_code = f"{year}{month:02d}00"
-            url = (
-                f"https://dashboard.e-stat.go.jp/api/1.0/Json/getData"
-                f"?Lang=JP&IndicatorCode={code}"
-                f"&Time={time_code}&RegionalRank=2&Cycle=1"
-                f"&IsSeasonalAdjustment=1&MetaGetFlg=N"
-            )
+    for obj in objs:
+        values = obj.get("VALUE", [])
+        if isinstance(values, dict):
+            values = [values]
+        for v in values:
+            if seasonal_code and v.get("@isSeasonal") != seasonal_code:
+                continue
+            time_code = v.get("@time", "")
+            # "YYYYMM00" -> "YYYY-MM"
+            if len(time_code) < 6 or not time_code[:6].isdigit():
+                continue
+            key = f"{time_code[:4]}-{time_code[4:6]}"
+            if key < start:
+                continue
             try:
-                data = fetch_json(url)
-                gs = data["GET_STATS"]
-                objs = gs.get("STATISTICAL_DATA", {}).get("DATA_INF", {}).get("DATA_OBJ", [])
-                if isinstance(objs, dict):
-                    objs = [objs]
-                if objs:
-                    val = float(objs[0]["VALUE"]["$"])
-                    key = f"{year:04d}-{month:02d}"
-                    result[key] = round1(val)
-            except Exception:
-                pass
+                result[key] = round1(float(v.get("$", "")))
+            except (TypeError, ValueError):
+                continue
     return result
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  ABS Data API (Australia)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def fetch_abs_sdmx_csv(dataflow, key, start=START_DATE):
+    """Fetch an ABS time series via SDMX-CSV. Returns {YYYY-MM: value}."""
+    url = (
+        f"https://data.api.abs.gov.au/data/{dataflow}/{key}"
+        f"?startPeriod={start[:7]}"
+    )
+    text = fetch_url(url, accept="application/vnd.sdmx.data+csv")
+    lines = text.strip().split("\n")
+    if len(lines) < 2:
+        return {}
+    header = lines[0].split(",")
+    try:
+        tp_idx = header.index("TIME_PERIOD")
+        ov_idx = header.index("OBS_VALUE")
+    except ValueError:
+        return {}
+    result = {}
+    for line in lines[1:]:
+        cols = line.split(",")
+        if len(cols) <= max(tp_idx, ov_idx):
+            continue
+        period = cols[tp_idx]
+        val = cols[ov_idx]
+        if not period or not val:
+            continue
+        try:
+            result[period] = float(val)
+        except ValueError:
+            continue
+    return result
+
+
+def fetch_abs_cpi_yoy():
+    """Australia Monthly CPI Indicator (YoY%) — splice two dataflows.
+
+    `CPI_M` covers 2018-09 ~ 2025-09 (series frozen in 2025-09 after re-weighting);
+    `CPI` covers the re-weighted series from 2025-04 onwards. Merge with `CPI`
+    taking precedence for overlap (it is the current authoritative series).
+    """
+    merged = {}
+    try:
+        old = fetch_abs_sdmx_csv("CPI_M", "3.999904.10.50.M")
+        for k, v in old.items():
+            merged[k] = round1(v)
+    except Exception as e:
+        print(f"    ABS CPI_M: [エラー] {e}")
+    try:
+        new = fetch_abs_sdmx_csv("CPI", "3.999904.10.50.M")
+        for k, v in new.items():
+            merged[k] = round1(v)
+    except Exception as e:
+        print(f"    ABS CPI: [エラー] {e}")
+    return merged
+
+
+def fetch_abs_unemployment():
+    """Australia unemployment rate (15+, SA).
+    Dataflow LF: MEASURE=M14, SEX=3 (persons), AGE=1599, TSEST=20 (SA), REGION=AUS, FREQ=M.
+    """
+    raw = fetch_abs_sdmx_csv("LF", "M14.3.1599.20.AUS.M")
+    return {k: round1(v) for k, v in raw.items()}
 
 
 def fetch_bis_policy_rate(country_code):
@@ -305,17 +478,12 @@ def fetch_bis_policy_rate(country_code):
     Daily data -> extract last valid value per month.
     country_code: ISO 2-letter code (GB, AU, JP)
     """
-    import ssl
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
     url = (
         f"https://stats.bis.org/api/v2/data/dataflow/BIS/WS_CBPOL/1.0/"
         f"D.{country_code}?startPeriod={START_DATE[:7]}"
     )
     req = Request(url, headers={"User-Agent": "Mozilla/5.0 (economic-data-updater)"})
-    with urlopen(req, timeout=60, context=ctx) as resp:
+    with urlopen(req, timeout=60) as resp:
         xml_text = resp.read().decode("utf-8")
 
     # Parse daily observations -> monthly (last valid value per month)
@@ -449,35 +617,36 @@ def update_us():
 
 def update_ca():
     print("\n🇨🇦 Canada")
-    print("  政策金利を取得中... (FRED: IRSTCI01CAM156N)")
-    interest_raw = fetch_fred("IRSTCI01CAM156N")
-    # Round to nearest 0.25 (BoC target rate increments)
-    interest = {k: round(v * 4) / 4 if v is not None else None
-                for k, v in interest_raw.items()}
-    print(f"    {len(interest)} ヶ月分取得")
-
-    print("  CPIを取得中... (Bank of Canada)")
+    print("  政策金利を取得中... (BoC Valet: V39079)")
     try:
-        cpi = fetch_boc_cpi()
-        if cpi:
-            print(f"    {len(cpi)} ヶ月分取得")
-        else:
-            cpi = {}
+        interest = fetch_boc_valet("V39079")
+        print(f"    {len(interest)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}, FREDにフォールバック")
+        interest_raw = fetch_fred("IRSTCI01CAM156N")
+        interest = {k: round(v * 4) / 4 if v is not None else None
+                    for k, v in interest_raw.items()}
+
+    print("  CPIを取得中... (StatsCan vector 41690973, YoY算出)")
+    try:
+        cpi = fetch_statcan_cpi_yoy()
+        print(f"    {len(cpi)} ヶ月分取得")
     except Exception as e:
         print(f"    [エラー] {e}")
         cpi = {}
-
-    # Fallback: if BoC scraping fails, try FRED (lagged)
-    if not cpi:
-        print("  CPI fallback: FRED (CPIAUCSL -> Canada版を検索中)...")
         existing = load_existing("ca")
         if existing:
             cpi = {l: v for l, v in zip(existing["labels"], existing["cpi"])}
             print(f"    既存データを維持 ({len(cpi)} ヶ月分)")
 
-    print("  失業率を取得中... (FRED: LRUNTTTTCAM156S)")
-    unemployment = fetch_fred("LRUNTTTTCAM156S")
-    print(f"    {len(unemployment)} ヶ月分取得")
+    print("  失業率を取得中... (StatsCan vector 2062815)")
+    try:
+        unemp_raw = fetch_statcan_vector(2062815)
+        unemployment = {k: round1(v) for k, v in unemp_raw.items()}
+        print(f"    {len(unemployment)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}, FREDにフォールバック")
+        unemployment = fetch_fred("LRUNTTTTCAM156S")
 
     labels = common_labels(interest, cpi, unemployment)
     ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, cpi, unemployment)
@@ -488,9 +657,9 @@ def update_ca():
         "code": "ca",
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
-            "interestRate": "Bank of Canada (Overnight Target Rate)",
-            "cpi": "Bank of Canada / Statistics Canada (CPI 前年同月比)",
-            "unemployment": "Statistics Canada (Labour Force Survey)"
+            "interestRate": "Bank of Canada (Valet V39079, Overnight Target Rate)",
+            "cpi": "Statistics Canada (Vector 41690973, CPI All-items YoY)",
+            "unemployment": "Statistics Canada (Vector 2062815, LFS 15+ SA)"
         },
         "labels": labels,
         "interestRate": ir_arr,
@@ -503,31 +672,38 @@ def update_ca():
 
 def update_eu():
     print("\n🇪🇺 Euro Area")
-    print("  政策金利を取得中... (ECB Deposit Facility Rate)")
+    print("  政策金利を取得中... (ECB Data API: FM DFR)")
     try:
         interest = fetch_ecb_deposit_rate()
-        if interest:
-            print(f"    {len(interest)} ヶ月分取得")
-        else:
-            interest = {}
+        if not interest:
+            raise ValueError("empty result")
+        print(f"    {len(interest)} ヶ月分取得")
     except Exception as e:
         print(f"    [エラー] {e}")
         interest = {}
-
-    # Fallback for interest rate
-    if not interest:
         existing = load_existing("eu")
         if existing:
             interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
             print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
-    print("  CPI (HICP) を取得中... (ECB Data API)")
-    hicp = fetch_ecb_hicp()
-    print(f"    {len(hicp)} ヶ月分取得")
+    print("  CPI (HICP) を取得中... (Eurostat prc_hicp_manr + teicp000 合成)")
+    try:
+        hicp = fetch_eurostat_hicp_yoy()
+        print(f"    {len(hicp)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}")
+        hicp = {}
+        existing = load_existing("eu")
+        if existing:
+            hicp = {l: v for l, v in zip(existing["labels"], existing["cpi"])}
 
-    print("  失業率を取得中... (Eurostat API)")
-    unemployment = fetch_eurostat_unemployment()
-    print(f"    {len(unemployment)} ヶ月分取得")
+    print("  失業率を取得中... (Eurostat une_rt_m)")
+    try:
+        unemployment = fetch_eurostat_unemployment_ea20()
+        print(f"    {len(unemployment)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}")
+        unemployment = {}
 
     labels = common_labels(interest, hicp, unemployment)
     ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, hicp, unemployment)
@@ -538,9 +714,9 @@ def update_eu():
         "code": "eu",
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
-            "interestRate": "ECB (Deposit Facility Rate)",
-            "cpi": "Eurostat (HICP 前年同月比)",
-            "unemployment": "Eurostat (季節調整済)"
+            "interestRate": "ECB Data API (FM DFR, Deposit Facility Rate)",
+            "cpi": "Eurostat (HICP YoY, prc_hicp_manr + teicp000 合成)",
+            "unemployment": "Eurostat (une_rt_m, EA20 SA)"
         },
         "labels": labels,
         "interestRate": ir_arr,
@@ -642,32 +818,35 @@ def update_gb():
 
 
 def fetch_au_cpi():
-    """Fetch Australia CPI: OECD monthly + FRED quarterly (forward-filled)."""
-    # 1) Quarterly from FRED, forward-fill to monthly
-    quarterly = fetch_fred("AUSCPIALLQINMEI", units="pc1")
+    """Fetch Australia CPI: ABS monthly indicator (2018-09+) with FRED quarterly backfill."""
+    # 1) Quarterly from FRED, forward-fill to monthly (covers pre-2018-09)
     monthly = {}
-    for label, val in sorted(quarterly.items()):
-        if val is None:
-            continue
-        y, m = label.split("-")
-        y, m = int(y), int(m)
-        # Forward-fill quarter value to 3 months
-        for offset in range(3):
-            nm = m + offset
-            ny = y
-            if nm > 12:
-                nm -= 12
-                ny += 1
-            key = f"{ny:04d}-{nm:02d}"
-            monthly[key] = round1(val)
-
-    # 2) Overlay with OECD monthly (more accurate, but limited period)
     try:
-        oecd = fetch_oecd_cpi("AUS")
-        monthly.update(oecd)
-        print(f"    OECD月次: {len(oecd)} ヶ月分")
+        quarterly = fetch_fred("AUSCPIALLQINMEI", units="pc1")
+        for label, val in sorted(quarterly.items()):
+            if val is None:
+                continue
+            y, m = label.split("-")
+            y, m = int(y), int(m)
+            for offset in range(3):
+                nm = m + offset
+                ny = y
+                if nm > 12:
+                    nm -= 12
+                    ny += 1
+                key = f"{ny:04d}-{nm:02d}"
+                monthly[key] = round1(val)
+        print(f"    FRED四半期フィル: {len(monthly)} ヶ月分")
     except Exception as e:
-        print(f"    OECD月次: [エラー] {e}")
+        print(f"    FRED四半期: [エラー] {e}")
+
+    # 2) Overlay with ABS monthly indicator (authoritative, fresh)
+    try:
+        abs_monthly = fetch_abs_cpi_yoy()
+        monthly.update(abs_monthly)
+        print(f"    ABS月次上書き: {len(abs_monthly)} ヶ月分")
+    except Exception as e:
+        print(f"    ABS月次: [エラー] {e}")
 
     return monthly
 
@@ -686,7 +865,7 @@ def update_au():
             interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
             print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
-    print("  CPIを取得中... (FRED四半期 + OECD月次)")
+    print("  CPIを取得中... (ABS月次 + FRED四半期フォールバック)")
     try:
         cpi = fetch_au_cpi()
         print(f"    合計: {len(cpi)} ヶ月分")
@@ -698,9 +877,13 @@ def update_au():
             cpi = {l: v for l, v in zip(existing["labels"], existing["cpi"])}
             print(f"    既存データを維持 ({len(cpi)} ヶ月分)")
 
-    print("  失業率を取得中... (FRED: LRHUTTTTAUM156S)")
-    unemployment = fetch_fred("LRHUTTTTAUM156S")
-    print(f"    {len(unemployment)} ヶ月分取得")
+    print("  失業率を取得中... (ABS LF: M14.3.1599.20.AUS.M)")
+    try:
+        unemployment = fetch_abs_unemployment()
+        print(f"    {len(unemployment)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}, FREDにフォールバック")
+        unemployment = fetch_fred("LRHUTTTTAUM156S")
 
     labels = common_labels(interest, cpi, unemployment)
     ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, cpi, unemployment)
@@ -711,9 +894,9 @@ def update_au():
         "code": "au",
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
-            "interestRate": "RBA (Cash Rate Target)",
-            "cpi": "OECD / ABS (CPI 前年同月比)",
-            "unemployment": "ABS (Labour Force Survey)"
+            "interestRate": "BIS WS_CBPOL D.AU (RBA Cash Rate Target)",
+            "cpi": "ABS Monthly CPI Indicator + FRED quarterly backfill",
+            "unemployment": "ABS Labour Force Survey (15+ SA)"
         },
         "labels": labels,
         "interestRate": ir_arr,
@@ -738,9 +921,9 @@ def update_jp():
             interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
             print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
-    print("  CPIを取得中... (e-Stat Dashboard API)")
+    print("  CPIを取得中... (e-Stat IndicatorCode 0703010501010030000 単一呼び出し)")
     try:
-        cpi = fetch_estat_cpi()
+        cpi = fetch_estat_series("0703010501010030000", seasonal_code=None)
         print(f"    {len(cpi)} ヶ月分取得")
     except Exception as e:
         print(f"    [エラー] {e}")
@@ -750,9 +933,13 @@ def update_jp():
             cpi = {l: v for l, v in zip(existing["labels"], existing["cpi"])}
             print(f"    既存データを維持 ({len(cpi)} ヶ月分)")
 
-    print("  失業率を取得中... (FRED: LRHUTTTTJPM156S)")
-    unemployment = fetch_fred("LRHUTTTTJPM156S")
-    print(f"    {len(unemployment)} ヶ月分取得")
+    print("  失業率を取得中... (e-Stat IndicatorCode 0301010000020020010, 季節調整値)")
+    try:
+        unemployment = fetch_estat_series("0301010000020020010", seasonal_code="2")
+        print(f"    {len(unemployment)} ヶ月分取得")
+    except Exception as e:
+        print(f"    [エラー] {e}, FREDにフォールバック")
+        unemployment = fetch_fred("LRHUTTTTJPM156S")
 
     labels = common_labels(interest, cpi, unemployment)
     ir_arr, cpi_arr, unemp_arr = build_arrays(labels, interest, cpi, unemployment)
@@ -763,9 +950,9 @@ def update_jp():
         "code": "jp",
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
-            "interestRate": "日本銀行 (政策金利)",
-            "cpi": "総務省統計局 (CPI 前年同月比)",
-            "unemployment": "総務省統計局 (労働力調査)"
+            "interestRate": "BIS WS_CBPOL D.JP (BoJ Policy Rate)",
+            "cpi": "総務省統計局 (e-Stat Dashboard, CPI 前年同月比 2020年基準)",
+            "unemployment": "総務省統計局 (e-Stat Dashboard, 労働力調査 完全失業率 季節調整値)"
         },
         "labels": labels,
         "interestRate": ir_arr,
