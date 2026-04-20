@@ -3,9 +3,9 @@
   "code": "eu",
   "lastUpdated": "2026-04-20",
   "sources": {
-    "interestRate": "ECB (Deposit Facility Rate)",
-    "cpi": "Eurostat (HICP 前年同月比)",
-    "unemployment": "Eurostat (季節調整済)"
+    "interestRate": "ECB Data API (FM DFR, Deposit Facility Rate)",
+    "cpi": "Eurostat (HICP YoY, prc_hicp_manr + teicp000 合成)",
+    "unemployment": "Eurostat (une_rt_m, EA20 SA)"
   },
   "labels": [
     "2016-01",
@@ -335,16 +335,16 @@
     5.1,
     5.9,
     7.4,
-    7.4,
+    7.5,
     8.1,
-    8.6,
+    8.7,
     8.9,
-    9.1,
+    9.2,
     9.9,
     10.6,
     10.1,
     9.2,
-    8.6,
+    8.7,
     8.5,
     6.9,
     7.0,
@@ -379,10 +379,10 @@
     2.2,
     2.1,
     2.1,
+    2.0,
+    1.7,
     1.9,
-    null,
-    null,
-    null,
+    2.6,
     null
   ],
   "unemployment": [

@@ -3,9 +3,9 @@
   "code": "jp",
   "lastUpdated": "2026-04-20",
   "sources": {
-    "interestRate": "日本銀行 (政策金利)",
-    "cpi": "総務省統計局 (CPI 前年同月比)",
-    "unemployment": "総務省統計局 (労働力調査)"
+    "interestRate": "BIS WS_CBPOL D.JP (BoJ Policy Rate)",
+    "cpi": "総務省統計局 (e-Stat Dashboard, CPI 前年同月比 2020年基準)",
+    "unemployment": "総務省統計局 (e-Stat Dashboard, 労働力調査 完全失業率 季節調整値)"
   },
   "labels": [
     "2016-01",
