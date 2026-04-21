@@ -369,9 +369,11 @@
     ];
 
     function detectTags(title) {
+      // Reutersは ＥＣＢ/ＦＲＢ 等を全角で書くので正規化してから照合
+      const normalized = title.normalize('NFKC');
       const tags = [];
       for (const { pattern, tag } of CB_TAGS) {
-        if (pattern.test(title)) {
+        if (pattern.test(normalized)) {
           tags.push(tag);
         }
       }
