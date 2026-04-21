@@ -198,6 +198,49 @@
       letter-spacing: 0.04em;
     }
 
+    /* ── Tag Filter ── */
+    .tag-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .tag-filter button {
+      font-family: var(--font-en);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--color-text-secondary);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      padding: 0.3rem 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .tag-filter button:hover:not(.active) {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .tag-filter button.active {
+      background: var(--color-accent);
+      color: #fff;
+      border-color: var(--color-accent);
+    }
+
+    .tag-filter .tag-count {
+      font-family: var(--font-jp);
+      font-size: 0.68rem;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-left: 0.25rem;
+    }
+
     .loading {
       text-align: center;
       padding: 3rem;
@@ -347,6 +390,7 @@
 
   <!-- Articles -->
   <div class="articles-section">
+    <div id="tag-filter" class="tag-filter" style="display:none;"></div>
     <div id="articles-container" class="loading">読み込み中...</div>
   </div>
 
@@ -399,15 +443,62 @@
 
     const PER_PAGE = 30;
     let allArticles = [];
+    let filteredArticles = [];
     let currentPage = 1;
+    let activeTag = null; // null = All
+
+    function applyFilter() {
+      if (activeTag === null) {
+        filteredArticles = allArticles;
+      } else {
+        filteredArticles = allArticles.filter(a => detectTags(a.title).includes(activeTag));
+      }
+    }
+
+    function renderFilter() {
+      const el = document.getElementById('tag-filter');
+      const counts = { __all: allArticles.length };
+      for (const { tag } of CB_TAGS) counts[tag] = 0;
+      for (const a of allArticles) {
+        for (const tag of detectTags(a.title)) counts[tag]++;
+      }
+
+      const buttons = [
+        { tag: null, label: 'All', count: counts.__all },
+        ...CB_TAGS.map(({ tag }) => ({ tag, label: tag, count: counts[tag] })),
+      ];
+
+      el.innerHTML = '';
+      for (const { tag, label, count } of buttons) {
+        const btn = document.createElement('button');
+        btn.className = (tag === activeTag) ? 'active' : '';
+        btn.innerHTML = `${label}<span class="tag-count">${count}</span>`;
+        btn.addEventListener('click', () => selectTag(tag));
+        el.appendChild(btn);
+      }
+      el.style.display = 'flex';
+    }
+
+    function selectTag(tag) {
+      if (tag === activeTag) return;
+      activeTag = tag;
+      applyFilter();
+      renderFilter();
+      renderPage(1);
+    }
 
     function renderPage(page) {
       currentPage = page;
       const container = document.getElementById('articles-container');
-      const totalPages = Math.ceil(allArticles.length / PER_PAGE);
+      const totalPages = Math.ceil(filteredArticles.length / PER_PAGE);
       const start = (page - 1) * PER_PAGE;
-      const end = Math.min(start + PER_PAGE, allArticles.length);
-      const pageArticles = allArticles.slice(start, end);
+      const end = Math.min(start + PER_PAGE, filteredArticles.length);
+      const pageArticles = filteredArticles.slice(start, end);
+
+      if (filteredArticles.length === 0) {
+        container.innerHTML = '<div class="loading">該当する記事がありません</div>';
+        return;
+      }
 
       const ul = document.createElement('ul');
       ul.className = 'article-list';
@@ -455,7 +546,7 @@
         }
         paginationHtml += `<button onclick="goPage(${page + 1})" ${page === totalPages ? 'disabled' : ''}>&raquo;</button>`;
         paginationHtml += '</div>';
-        paginationHtml += `<div class="pagination-info">${start + 1}–${end} / ${allArticles.length}件</div>`;
+        paginationHtml += `<div class="pagination-info">${start + 1}–${end} / ${filteredArticles.length}件</div>`;
       }
 
       container.innerHTML = '';
@@ -466,7 +557,7 @@
     }
 
     function goPage(page) {
-      const totalPages = Math.ceil(allArticles.length / PER_PAGE);
+      const totalPages = Math.ceil(filteredArticles.length / PER_PAGE);
       if (page < 1 || page > totalPages) return;
       renderPage(page);
     }
@@ -488,6 +579,8 @@
         }
 
         allArticles = data.articles;
+        applyFilter();
+        renderFilter();
         renderPage(1);
 
       } catch (err) {
