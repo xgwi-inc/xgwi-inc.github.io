@@ -12,6 +12,7 @@
 import json
 import re
 import time
+import unicodedata
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -82,8 +83,10 @@ def fetch_rss(query):
 
 def is_cb_rate_article(title):
     """タイトルが中央銀行/IMFの金利関連かどうか判定"""
-    has_cb = any(re.search(kw, title) for kw in CB_KEYWORDS)
-    has_rate = any(re.search(kw, title) for kw in RATE_KEYWORDS)
+    # Reutersは ＥＣＢ/ＦＲＢ 等を全角で書くので正規化してから照合
+    normalized = unicodedata.normalize('NFKC', title)
+    has_cb = any(re.search(kw, normalized) for kw in CB_KEYWORDS)
+    has_rate = any(re.search(kw, normalized) for kw in RATE_KEYWORDS)
     return has_cb and has_rate
 
 
