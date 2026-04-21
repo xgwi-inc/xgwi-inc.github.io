@@ -386,7 +386,8 @@
     null
   ],
   "unemployment": [
-    5.1,
+    null,
+    null,
     5.1,
     5.0,
     4.9,
@@ -507,7 +508,6 @@
     5.2,
     5.2,
     4.9,
-    null,
     null,
     null
   ]
