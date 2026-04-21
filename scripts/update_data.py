@@ -735,8 +735,10 @@ MONTH_ABBR_TO_NUM = {
 
 def fetch_ons_unemployment():
     """Fetch UK unemployment rate (aged 16+, SA) from ONS timeseries MGSX.
-    Monthly value is the 3-month rolling average centered on that month.
-    Typically ~1 month fresher than FRED's OECD harmonized series.
+    Value is a 3-month rolling average. ONS labels by the middle month in
+    the `date` field but the `label` field (e.g. "2025 DEC-FEB") carries the
+    actual 3-month window. Market convention references the end month, so we
+    key each observation by the end month of the window.
     """
     url = "https://www.ons.gov.uk/employmentandlabourmarket/peoplenotinwork/unemployment/timeseries/mgsx/lms/data"
     req = Request(url, headers={"User-Agent": "Mozilla/5.0 (economic-data-updater)", "Accept": "application/json"})
@@ -745,17 +747,24 @@ def fetch_ons_unemployment():
 
     result = {}
     for m in data.get("months", []):
-        # date format: "2025 DEC"
-        parts = m.get("date", "").split()
-        if len(parts) != 2:
+        label = m.get("label", "")
+        # Expected format: "YYYY START-END" e.g. "2025 DEC-FEB"
+        parts = label.split()
+        if len(parts) != 2 or '-' not in parts[1]:
             continue
-        year_str, mon_abbr = parts
-        if not year_str.isdigit() or mon_abbr not in MONTH_ABBR_TO_NUM:
+        year_str, window = parts
+        start_abbr, _, end_abbr = window.partition('-')
+        if (not year_str.isdigit()
+                or start_abbr not in MONTH_ABBR_TO_NUM
+                or end_abbr not in MONTH_ABBR_TO_NUM):
             continue
-        year = int(year_str)
-        if year < 2016:
+        start_year = int(year_str)
+        if start_year < 2016:
             continue
-        key = f"{year:04d}-{MONTH_ABBR_TO_NUM[mon_abbr]:02d}"
+        start_month = MONTH_ABBR_TO_NUM[start_abbr]
+        end_month = MONTH_ABBR_TO_NUM[end_abbr]
+        end_year = start_year + 1 if end_month < start_month else start_year
+        key = f"{end_year:04d}-{end_month:02d}"
         try:
             result[key] = round1(float(m["value"]))
         except (ValueError, KeyError):
