@@ -12,7 +12,7 @@
 import json
 import re
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -21,6 +21,7 @@ from xml.etree import ElementTree
 
 SCRIPT_DIR = Path(__file__).parent
 DATA_DIR = SCRIPT_DIR.parent / "data"
+OUTPUT_PATH = DATA_DIR / 'cb_articles.json'
 
 # Google News RSS search queries (jp.reuters.com の中央銀行・IMF 金利関連記事)
 QUERIES = [
@@ -86,14 +87,27 @@ def is_cb_rate_article(title):
     return has_cb and has_rate
 
 
+def load_existing_articles():
+    """既存のJSONを読み込み、title -> article の辞書で返す"""
+    if not OUTPUT_PATH.exists():
+        return {}
+    try:
+        with open(OUTPUT_PATH, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return {a['title']: a for a in data.get('articles', [])}
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[警告] 既存データの読み込みに失敗: {e}")
+        return {}
+
+
 def main():
-    cutoff = datetime.now(timezone.utc) - timedelta(days=14)
-    articles = {}
+    articles = load_existing_articles()
+    existing_count = len(articles)
 
     print("=" * 50)
     print("中央銀行関係者 Reuters記事取得スクリプト (日本語版)")
     print(f"実行日時: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    print(f"対象期間: 直近2週間 ({cutoff.strftime('%Y-%m-%d')} 以降)")
+    print(f"既存記事: {existing_count} 件 (積み重ねモード)")
     print("=" * 50)
 
     for i, query in enumerate(QUERIES):
@@ -124,10 +138,6 @@ def main():
                 except Exception:
                     continue
 
-                # 2週間以内
-                if pub_date < cutoff:
-                    continue
-
                 # 中央銀行関連のフィルタ
                 if not is_cb_rate_article(title):
                     continue
@@ -152,22 +162,24 @@ def main():
         articles.values(), key=lambda x: x['pubDate'], reverse=True
     )
 
+    oldest_date = sorted_articles[-1]['pubDate'] if sorted_articles else None
+    newly_added = len(sorted_articles) - existing_count
+
     # 保存
     output = {
         'lastUpdated': datetime.now(timezone.utc).isoformat(),
-        'cutoffDate': cutoff.isoformat(),
+        'oldestDate': oldest_date,
         'count': len(sorted_articles),
         'articles': sorted_articles,
     }
 
-    path = DATA_DIR / 'cb_articles.json'
-    with open(path, 'w', encoding='utf-8') as f:
+    with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
         f.write('\n')
 
     print(f"\n{'=' * 50}")
-    print(f"完了！ {len(sorted_articles)} 件の記事を保存しました")
-    print(f"  -> {path}")
+    print(f"完了！ 合計 {len(sorted_articles)} 件 (新規 {newly_added} 件追加)")
+    print(f"  -> {OUTPUT_PATH}")
     print(f"{'=' * 50}")
 
 
