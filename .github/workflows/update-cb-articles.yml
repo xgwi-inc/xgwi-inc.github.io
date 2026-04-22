@@ -2,8 +2,8 @@ name: Update CB Articles
 
 on:
   schedule:
-    # 毎時17分に実行（:00はcron混雑ピークのため避ける）
-    - cron: '17 * * * *'
+    # 2時間ごと、17分に実行（:00はcron混雑ピークのため避ける）
+    - cron: '17 */2 * * *'
   workflow_dispatch: # 手動実行も可能
 
 permissions:
