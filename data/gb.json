@@ -1,7 +1,7 @@
 {
   "country": "United Kingdom",
   "code": "gb",
-  "lastUpdated": "2026-04-23",
+  "lastUpdated": "2026-05-02",
   "sources": {
     "interestRate": "Bank of England (Bank Rate)",
     "cpi": "OECD (CPI 前年同月比)",
@@ -382,7 +382,7 @@
     3.6,
     3.2,
     3.2,
-    null,
+    3.4,
     null
   ],
   "unemployment": [

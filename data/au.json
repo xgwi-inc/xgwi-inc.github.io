@@ -1,7 +1,7 @@
 {
   "country": "Australia",
   "code": "au",
-  "lastUpdated": "2026-04-23",
+  "lastUpdated": "2026-05-02",
   "sources": {
     "interestRate": "BIS WS_CBPOL D.AU (RBA Cash Rate Target)",
     "cpi": "ABS Monthly CPI Indicator + FRED quarterly backfill",
@@ -382,7 +382,7 @@
     3.8,
     4.1,
     4.1,
-    null,
+    4.1,
     null
   ],
   "unemployment": [
