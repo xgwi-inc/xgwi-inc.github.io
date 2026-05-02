@@ -272,13 +272,15 @@ def fetch_eurostat_hicp_yoy():
 
 
 def fetch_eurostat_unemployment_ea20():
-    """EA20 unemployment rate (seasonally adjusted, total)."""
+    """Euro Area unemployment rate (seasonally adjusted, total).
+    Uses EA21 (Bulgaria joined 2025-01) — Eurostat retired EA20 in une_rt_m.
+    """
     return {
         k: round1(v)
         for k, v in fetch_eurostat_jsonstat(
             "une_rt_m",
             {
-                "geo": "EA20",
+                "geo": "EA21",
                 "age": "TOTAL",
                 "sex": "T",
                 "unit": "PC_ACT",
@@ -716,7 +718,7 @@ def update_eu():
         "sources": {
             "interestRate": "ECB Data API (FM DFR, Deposit Facility Rate)",
             "cpi": "Eurostat (HICP YoY, prc_hicp_manr + teicp000 合成)",
-            "unemployment": "Eurostat (une_rt_m, EA20 SA)"
+            "unemployment": "Eurostat (une_rt_m, EA21 SA)"
         },
         "labels": labels,
         "interestRate": ir_arr,
