@@ -1,7 +1,7 @@
 {
   "country": "United Kingdom",
   "code": "gb",
-  "lastUpdated": "2026-05-04",
+  "lastUpdated": "2026-05-05",
   "sources": {
     "interestRate": "Bank of England (Bank Rate)",
     "cpi": "OECD (CPI 前年同月比)",
