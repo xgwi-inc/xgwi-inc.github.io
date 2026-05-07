@@ -1,36 +1,5 @@
 {
-  "lastUpdated": "2026-05-07T07:43:04+00:00",
-  "count": 3,
-  "entries": [
-    {
-      "date": "2026-05-07",
-      "trades": [
-        {
-          "symbol": "USDJPY",
-          "pnl_pips": -5.0
-        },
-        {
-          "symbol": "GBPUSD",
-          "pnl_pips": -20.0
-        },
-        {
-          "symbol": "EURUSD",
-          "pnl_pips": 200.2
-        }
-      ]
-    },
-    {
-      "date": "2026-04-18",
-      "trades": []
-    },
-    {
-      "date": "2026-04-16",
-      "trades": [
-        {
-          "symbol": "USDJPY",
-          "pnl_pips": 100.0
-        }
-      ]
-    }
-  ]
+  "lastUpdated": null,
+  "count": 0,
+  "entries": []
 }
