@@ -151,9 +151,6 @@ def collect_trades(suggestions):
     while True:
         symbol = _ask_symbol(suggestions)
         if symbol is None:
-            if not trades:
-                print("  少なくとも 1 件入力してください (中止する場合は Ctrl+C)")
-                continue
             break
         pnl = _ask_pips()
         trades.append({"symbol": symbol, "pnl_pips": pnl})
@@ -162,6 +159,9 @@ def collect_trades(suggestions):
 
 def render_preview(entry):
     lines = [entry["date"]]
+    if not entry["trades"]:
+        lines.append("  ノートレ")
+        return "\n".join(lines)
     for t in entry["trades"]:
         lines.append(f"  {t['symbol']}  {format_pips(t['pnl_pips'])}")
     wins, losses, total = summarize(entry["trades"])

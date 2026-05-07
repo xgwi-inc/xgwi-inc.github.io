@@ -208,6 +208,11 @@
     .pips-loss { color: var(--color-loss); }
     .pips-flat { color: var(--color-text-tertiary); }
 
+    .diary-notrade {
+      color: var(--color-text-tertiary);
+      font-style: italic;
+    }
+
     .loading, .empty, .error {
       text-align: center;
       padding: 3rem;
@@ -333,13 +338,23 @@
       ul.className = 'diary-list';
 
       for (const entry of entries) {
-        const { wins, losses, total } = summarize(entry.trades);
-
         const li = document.createElement('li');
         li.className = 'diary-day';
 
         const header = document.createElement('div');
         header.className = 'diary-day-header';
+
+        if (entry.trades.length === 0) {
+          header.innerHTML = `
+            <span class="diary-date">${escapeHtml(entry.date)}</span>
+            <span class="diary-summary diary-notrade">ノートレ</span>
+          `;
+          li.appendChild(header);
+          ul.appendChild(li);
+          continue;
+        }
+
+        const { wins, losses, total } = summarize(entry.trades);
         header.innerHTML = `
           <span class="diary-date">${escapeHtml(entry.date)}</span>
           <span class="diary-summary">

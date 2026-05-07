@@ -7,6 +7,7 @@ from new_diary import (
     format_pips,
     load_diary,
     recent_symbols,
+    render_preview,
     save_diary,
     summarize,
     upsert_entry,
@@ -171,6 +172,38 @@ class TestLoadSaveRoundTrip:
         save_diary(path, data)
         loaded = json.loads(path.read_text(encoding="utf-8"))
         assert loaded["count"] == 1
+
+
+class TestRenderPreview:
+    def test_no_trade_day_shows_notrade(self):
+        out = render_preview({"date": "2026-05-07", "trades": []})
+        assert "ノートレ" in out
+        # サマリ行は出さない
+        assert "勝" not in out
+
+    def test_with_trades_shows_summary(self):
+        out = render_preview({"date": "2026-05-07", "trades": [
+            {"symbol": "GBPUSD", "pnl_pips": -10.6}
+        ]})
+        assert "GBPUSD" in out
+        assert "0勝 1敗" in out
+        assert "-10.6pips" in out
+
+
+class TestUpsertEmptyTrades:
+    def test_no_trade_entry_can_be_added(self):
+        data = empty_diary()
+        upsert_entry(data, {"date": "2026-05-07", "trades": []})
+        assert len(data["entries"]) == 1
+        assert data["entries"][0]["trades"] == []
+
+    def test_replace_with_empty_trades_creates_notrade_day(self):
+        data = empty_diary()
+        upsert_entry(data, {"date": "2026-05-07", "trades": [
+            {"symbol": "GBPUSD", "pnl_pips": -10.6}
+        ]})
+        upsert_entry(data, {"date": "2026-05-07", "trades": []}, mode="replace")
+        assert data["entries"][0]["trades"] == []
 
 
 class TestExistingDataFile:
