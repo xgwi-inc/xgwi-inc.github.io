@@ -7,7 +7,7 @@
   python scripts/update_data.py
 
 データソース:
-  US     - FRED API (FEDFUNDS, CPIAUCSL, UNRATE)
+  US     - FRED API (DFEDTARU target upper bound, CPIAUCSL, UNRATE)
   Canada - FRED API (IRSTCI01CAM156N, LRUNTTTTCAM156S) + Bank of Canada (CPI)
   EU     - ECB Data API (HICP) + Eurostat API (unemployment) + ECB (deposit rate)
   UK     - OECD API (CPI) + ONS (unemployment) + BoE IADB IUDBEDR (Bank Rate, BIS fallback)
@@ -95,7 +95,16 @@ def save_json(code, data):
 #  FRED API
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def fetch_fred(series_id, units="lin", start=START_DATE):
+def fetch_fred(series_id, units="lin", start=START_DATE, round_digits=1):
+    """Fetch a FRED series and return {YYYY-MM: value}.
+
+    For daily series (e.g. DFEDTARU), collapsing by `to_label` keeps the
+    last observation in each month — i.e. the month-end step value.
+    `round_digits` defaults to 1 to match the precision of the legacy
+    monthly indicators (CPIAUCSL, UNRATE, etc.); pass 2 for policy rates
+    that have quarter-point resolution (4.75, 4.25, …) which round1 would
+    corrupt (4.75 → 4.8 under banker's rounding).
+    """
     url = (
         f"https://api.stlouisfed.org/fred/series/observations"
         f"?series_id={series_id}"
@@ -111,7 +120,7 @@ def fetch_fred(series_id, units="lin", start=START_DATE):
         if obs["value"] == ".":
             result[to_label(obs["date"])] = None
         else:
-            result[to_label(obs["date"])] = round1(float(obs["value"]))
+            result[to_label(obs["date"])] = round(float(obs["value"]), round_digits)
     return result
 
 
@@ -671,8 +680,8 @@ def trim_labels(labels, *arrays):
 
 def update_us():
     print("\n🇺🇸 United States")
-    print("  政策金利を取得中... (FRED: FEDFUNDS)")
-    interest = fetch_fred("FEDFUNDS")
+    print("  政策金利を取得中... (FRED: DFEDTARU, target upper bound)")
+    interest = fetch_fred("DFEDTARU", round_digits=2)
     print(f"    {len(interest)} ヶ月分取得")
 
     print("  CPIを取得中... (FRED: CPIAUCSL, YoY変換)")
@@ -692,7 +701,7 @@ def update_us():
         "code": "us",
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
-            "interestRate": "Federal Reserve (FRED FEDFUNDS)",
+            "interestRate": "Federal Reserve (FRED DFEDTARU, FOMC target upper bound)",
             "cpi": "Bureau of Labor Statistics (CPI-U 前年同月比)",
             "unemployment": "Bureau of Labor Statistics (LNS14000000)"
         },
