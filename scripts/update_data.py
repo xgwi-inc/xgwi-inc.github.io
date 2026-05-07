@@ -10,7 +10,7 @@
   US     - FRED API (FEDFUNDS, CPIAUCSL, UNRATE)
   Canada - FRED API (IRSTCI01CAM156N, LRUNTTTTCAM156S) + Bank of Canada (CPI)
   EU     - ECB Data API (HICP) + Eurostat API (unemployment) + ECB (deposit rate)
-  UK     - FRED API (GBRCPIALLMINMEI, LRHUTTTTGBM156S) + BoE Bank Rate (hardcoded)
+  UK     - OECD API (CPI) + ONS (unemployment) + BoE IADB IUDBEDR (Bank Rate, BIS fallback)
   AU     - ABS Data API (CPI/unemployment) + RBA Cash Rate via DBnomics (BIS fallback)
   JP     - e-Stat Dashboard API (CPI) + FRED API (unemployment) + BoJ Policy Rate (hardcoded)
 """
@@ -523,6 +523,46 @@ def fetch_rba_cash_rate():
     return result
 
 
+_MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+
+def fetch_boe_bank_rate(start=START_DATE):
+    """BoE Bank Rate via IADB CSV endpoint (series IUDBEDR, daily).
+
+    Collapse to monthly using the last business-day value per month. BoE
+    publishes the previous business day's rate next morning, so this trails
+    "real time" by ~1 day — far better than BIS WS_CBPOL D.GB (~10-day lag).
+    """
+    y, m = int(start[:4]), int(start[5:7])
+    datefrom = f"01/{_MONTH_ABBR[m - 1]}/{y}"
+    url = (
+        "https://www.bankofengland.co.uk/boeapps/database/_iadb-fromshowcolumns.asp"
+        "?csv.x=yes"
+        f"&Datefrom={datefrom}"
+        "&Dateto=now"
+        "&SeriesCodes=IUDBEDR"
+        "&CSVF=TN&UsingCodes=Y&VPD=Y&VFD=N"
+    )
+    text = fetch_url(url, accept="text/csv")
+    monthly = {}
+    for line in text.strip().split("\n")[1:]:
+        cols = line.split(",")
+        if len(cols) < 2:
+            continue
+        date_str, val = cols[0].strip(), cols[1].strip()
+        if not date_str or not val:
+            continue
+        try:
+            dt = datetime.strptime(date_str, "%d %b %Y")
+            rate = float(val)
+        except ValueError:
+            continue
+        key = f"{dt.year:04d}-{dt.month:02d}"
+        monthly[key] = round(rate, 2)  # later dates overwrite -> month-end
+    return monthly
+
+
 def fetch_bis_policy_rate(country_code):
     """Fetch central bank policy rate from BIS SDMX API (no key needed).
     Daily data -> extract last valid value per month.
@@ -824,17 +864,25 @@ def fetch_ons_unemployment():
 
 def update_gb():
     print("\n🇬🇧 United Kingdom")
-    print("  政策金利を取得中... (BIS: BoE Bank Rate)")
+    print("  政策金利を取得中... (BoE IADB IUDBEDR, BIS fallback)")
+    interest = None
     try:
-        interest = fetch_bis_policy_rate("GB")
-        print(f"    {len(interest)} ヶ月分取得")
+        interest = fetch_boe_bank_rate()
+        if interest:
+            print(f"    {len(interest)} ヶ月分取得 (BoE IADB)")
     except Exception as e:
-        print(f"    [エラー] {e}")
-        interest = {}
-        existing = load_existing("gb")
-        if existing:
-            interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
-            print(f"    既存データを維持 ({len(interest)} ヶ月分)")
+        print(f"    BoE IADB [エラー] {e}, BISにフォールバック")
+    if not interest:
+        try:
+            interest = fetch_bis_policy_rate("GB")
+            print(f"    {len(interest)} ヶ月分取得 (BIS)")
+        except Exception as e:
+            print(f"    BIS [エラー] {e}")
+            interest = {}
+            existing = load_existing("gb")
+            if existing:
+                interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
+                print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
     print("  CPIを取得中... (OECD: GBR CPI YoY)")
     try:
@@ -863,7 +911,7 @@ def update_gb():
         "code": "gb",
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
-            "interestRate": "Bank of England (Bank Rate)",
+            "interestRate": "Bank of England IADB (IUDBEDR Bank Rate, BIS fallback)",
             "cpi": "OECD (CPI 前年同月比)",
             "unemployment": "ONS (Labour Force Survey, MGSX)"
         },
