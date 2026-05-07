@@ -156,7 +156,25 @@
       align-items: baseline;
       justify-content: space-between;
       gap: 1rem;
-      margin-bottom: 0.5rem;
+    }
+
+    .diary-day.has-trades .diary-day-header {
+      cursor: pointer;
+    }
+
+    .diary-day.has-trades .diary-date::before {
+      content: '▸';
+      display: inline-block;
+      width: 1em;
+      margin-right: 0.15em;
+      color: var(--color-text-tertiary);
+      font-size: 0.7em;
+      transition: transform 0.15s;
+    }
+
+    .diary-day.has-trades:hover .diary-date::before,
+    .diary-day.has-trades.is-open .diary-date::before {
+      transform: rotate(90deg);
     }
 
     .diary-date {
@@ -182,6 +200,13 @@
     .diary-trades {
       list-style: none;
       margin-left: 0.25rem;
+      display: none;
+      margin-top: 0.5rem;
+    }
+
+    .diary-day:hover .diary-trades,
+    .diary-day.is-open .diary-trades {
+      display: block;
     }
 
     .diary-trade {
@@ -354,6 +379,8 @@
           continue;
         }
 
+        li.classList.add('has-trades');
+
         const { wins, losses, total } = summarize(entry.trades);
         header.innerHTML = `
           <span class="diary-date">${escapeHtml(entry.date)}</span>
@@ -362,6 +389,7 @@
             <span class="${pipsClass(total)}">${formatPips(total)}</span>
           </span>
         `;
+        header.addEventListener('click', () => li.classList.toggle('is-open'));
         li.appendChild(header);
 
         const trades = document.createElement('ul');
