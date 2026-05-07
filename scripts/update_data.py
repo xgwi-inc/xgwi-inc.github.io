@@ -11,7 +11,7 @@
   Canada - FRED API (IRSTCI01CAM156N, LRUNTTTTCAM156S) + Bank of Canada (CPI)
   EU     - ECB Data API (HICP) + Eurostat API (unemployment) + ECB (deposit rate)
   UK     - FRED API (GBRCPIALLMINMEI, LRHUTTTTGBM156S) + BoE Bank Rate (hardcoded)
-  AU     - OECD API (CPI) + FRED API (unemployment) + RBA Cash Rate (hardcoded)
+  AU     - ABS Data API (CPI/unemployment) + RBA Cash Rate via DBnomics (BIS fallback)
   JP     - e-Stat Dashboard API (CPI) + FRED API (unemployment) + BoJ Policy Rate (hardcoded)
 """
 
@@ -475,6 +475,54 @@ def fetch_abs_unemployment():
     return {k: round1(v) for k, v in raw.items()}
 
 
+def fetch_rba_cash_rate():
+    """RBA Cash Rate Target via DBnomics (RBA A2 / ARBAMPCNCRT — "New Cash Rate Target").
+
+    Event-based series (one row per decision). Forward-fill to month-end starting
+    from 2016-01, matching the convention used elsewhere. DBnomics typically lists
+    a decision within hours of the RBA announcement, so May 2026's 4.35 lands in
+    the same week — much faster than BIS WS_CBPOL, which lags 1–2 weeks.
+    """
+    url = "https://api.db.nomics.world/v22/series/RBA/A2/ARBAMPCNCRT?observations=1"
+    data = fetch_json(url)
+    docs = data.get("series", {}).get("docs", [])
+    if not docs:
+        return None
+    s = docs[0]
+    decisions = []
+    for p, v in zip(s.get("period", []), s.get("value", [])):
+        if v in (None, "NA", "", "."):
+            continue
+        try:
+            decisions.append((p, float(v)))
+        except (TypeError, ValueError):
+            continue
+    if not decisions:
+        return None
+    decisions.sort()
+
+    decision_map = {}
+    current_rate = decisions[0][1]
+    for date, rate in decisions:
+        if date[:7] < "2016-01":
+            current_rate = rate
+            continue
+        decision_map[date[:7]] = rate  # last decision in a given month wins
+
+    result = {}
+    now = datetime.now()
+    y, m = 2016, 1
+    while (y, m) <= (now.year, now.month):
+        key = f"{y:04d}-{m:02d}"
+        if key in decision_map:
+            current_rate = decision_map[key]
+        result[key] = round(current_rate, 2)
+        m += 1
+        if m > 12:
+            m, y = 1, y + 1
+    return result
+
+
 def fetch_bis_policy_rate(country_code):
     """Fetch central bank policy rate from BIS SDMX API (no key needed).
     Daily data -> extract last valid value per month.
@@ -864,17 +912,25 @@ def fetch_au_cpi():
 
 def update_au():
     print("\n🇦🇺 Australia")
-    print("  政策金利を取得中... (BIS: RBA Cash Rate)")
+    print("  政策金利を取得中... (DBnomics RBA/A2/ARBAMPCNCRT, BIS fallback)")
+    interest = None
     try:
-        interest = fetch_bis_policy_rate("AU")
-        print(f"    {len(interest)} ヶ月分取得")
+        interest = fetch_rba_cash_rate()
+        if interest:
+            print(f"    {len(interest)} ヶ月分取得 (RBA A2)")
     except Exception as e:
-        print(f"    [エラー] {e}")
-        interest = {}
-        existing = load_existing("au")
-        if existing:
-            interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
-            print(f"    既存データを維持 ({len(interest)} ヶ月分)")
+        print(f"    RBA A2 [エラー] {e}, BISにフォールバック")
+    if not interest:
+        try:
+            interest = fetch_bis_policy_rate("AU")
+            print(f"    {len(interest)} ヶ月分取得 (BIS)")
+        except Exception as e:
+            print(f"    BIS [エラー] {e}")
+            interest = {}
+            existing = load_existing("au")
+            if existing:
+                interest = {l: v for l, v in zip(existing["labels"], existing["interestRate"])}
+                print(f"    既存データを維持 ({len(interest)} ヶ月分)")
 
     print("  CPIを取得中... (ABS月次 + FRED四半期フォールバック)")
     try:
@@ -905,7 +961,7 @@ def update_au():
         "code": "au",
         "lastUpdated": datetime.now().strftime("%Y-%m-%d"),
         "sources": {
-            "interestRate": "BIS WS_CBPOL D.AU (RBA Cash Rate Target)",
+            "interestRate": "RBA A2 (Cash Rate Target via DBnomics, BIS fallback)",
             "cpi": "ABS Monthly CPI Indicator + FRED quarterly backfill",
             "unemployment": "ABS Labour Force Survey (15+ SA)"
         },
