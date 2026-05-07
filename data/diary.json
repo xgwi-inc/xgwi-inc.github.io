@@ -1,5 +1,15 @@
 {
-  "lastUpdated": null,
-  "count": 0,
-  "entries": []
+  "lastUpdated": "2026-05-07T07:35:10+00:00",
+  "count": 1,
+  "entries": [
+    {
+      "date": "2026-04-16",
+      "trades": [
+        {
+          "symbol": "USDJPY",
+          "pnl_pips": 100.0
+        }
+      ]
+    }
+  ]
 }
