@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>トレード日記 | 合同会社xgwi</title>
+  <meta name="description" content="日々のトレード記録">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg: #fafaf9;
+      --color-surface: #ffffff;
+      --color-text: #1c1917;
+      --color-text-secondary: #57534e;
+      --color-text-tertiary: #a8a29e;
+      --color-accent: #1e3a5f;
+      --color-accent-light: #2d5a8e;
+      --color-border: #e7e5e4;
+      --color-border-light: #f0efed;
+      --color-win: #15803d;
+      --color-loss: #b91c1c;
+      --font-jp: 'Noto Sans JP', sans-serif;
+      --font-en: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-jp);
+      background: var(--color-bg);
+      color: var(--color-text);
+      line-height: 1.8;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ── */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(250, 250, 249, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .header-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--font-en);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--color-accent);
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    .logo span {
+      font-weight: 400;
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      margin-right: 0.5rem;
+      font-family: var(--font-jp);
+      letter-spacing: 0.08em;
+    }
+
+    nav a {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      margin-left: 2rem;
+      transition: color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    nav a:hover {
+      color: var(--color-accent);
+    }
+
+    /* ── Hero ── */
+    .page-hero {
+      padding: 8rem 2rem 3rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .page-hero .section-label {
+      font-family: var(--font-en);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--color-accent);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-hero h1 {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 600;
+      line-height: 1.5;
+      margin-bottom: 0.75rem;
+    }
+
+    .page-hero p {
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      line-height: 1.8;
+    }
+
+    .meta-info {
+      font-size: 0.8rem;
+      color: var(--color-text-tertiary);
+      margin-top: 0.5rem;
+    }
+
+    /* ── Diary List ── */
+    .diary-section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+    }
+
+    .diary-list {
+      list-style: none;
+    }
+
+    .diary-day {
+      border-top: 1px solid var(--color-border-light);
+      padding: 1.25rem 0.5rem;
+    }
+
+    .diary-day:last-child {
+      border-bottom: 1px solid var(--color-border-light);
+    }
+
+    .diary-day-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .diary-date {
+      font-family: var(--font-en);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-text);
+      letter-spacing: 0.02em;
+    }
+
+    .diary-summary {
+      font-family: var(--font-en);
+      font-size: 0.78rem;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.04em;
+    }
+
+    .diary-summary .wl {
+      color: var(--color-text-tertiary);
+      margin-right: 0.6rem;
+    }
+
+    .diary-trades {
+      list-style: none;
+      margin-left: 0.25rem;
+    }
+
+    .diary-trade {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .trade-symbol {
+      font-family: var(--font-en);
+      font-weight: 500;
+      color: var(--color-text);
+      min-width: 96px;
+    }
+
+    .trade-pips {
+      font-family: var(--font-en);
+      font-weight: 500;
+    }
+
+    .pips-win  { color: var(--color-win); }
+    .pips-loss { color: var(--color-loss); }
+    .pips-flat { color: var(--color-text-tertiary); }
+
+    .loading, .empty, .error {
+      text-align: center;
+      padding: 3rem;
+      font-size: 0.9rem;
+    }
+    .loading, .empty { color: var(--color-text-tertiary); }
+    .error { color: #b91c1c; }
+
+    /* ── Footer ── */
+    footer {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--color-text-tertiary);
+    }
+
+    footer .footer-logo {
+      font-family: var(--font-en);
+      font-weight: 600;
+      color: var(--color-text-tertiary);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .header-inner { padding: 0 1.25rem; }
+      .logo span { display: none; }
+      nav a { margin-left: 1.25rem; font-size: 0.75rem; }
+      .page-hero { padding: 7rem 1.25rem 2rem; }
+      .diary-section { padding: 0 1.25rem 3rem; }
+      .diary-day-header {
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+      footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+        padding: 2rem 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+      <a href="index.html" class="logo"><span>合同会社</span>xgwi</a>
+      <nav>
+        <a href="index.html">ホーム</a>
+        <a href="data.html">経済指標</a>
+        <a href="calendar.html">カレンダー</a>
+        <a href="cb-articles.html">CB発言</a>
+        <a href="diary.html">日記</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div class="page-hero">
+    <div class="section-label">Trade Diary</div>
+    <h1>トレード日記</h1>
+    <p>日々のトレード記録</p>
+    <div class="meta-info" id="meta-info"></div>
+  </div>
+
+  <!-- Diary -->
+  <div class="diary-section">
+    <div id="diary-container" class="loading">読み込み中...</div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-logo">xgwi LLC</div>
+    <div>&copy; 2026 合同会社xgwi. All rights reserved.</div>
+  </footer>
+
+  <script>
+    function formatPips(p) {
+      const sign = p > 0 ? '+' : '';
+      return `${sign}${p}pips`;
+    }
+
+    function pipsClass(p) {
+      if (p > 0) return 'pips-win';
+      if (p < 0) return 'pips-loss';
+      return 'pips-flat';
+    }
+
+    function summarize(trades) {
+      let wins = 0, losses = 0, total = 0;
+      for (const t of trades) {
+        if (t.pnl_pips > 0) wins++;
+        else if (t.pnl_pips < 0) losses++;
+        total += t.pnl_pips;
+      }
+      total = Math.round(total * 10) / 10;
+      return { wins, losses, total };
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function formatLastUpdated(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleString('ja-JP', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+      });
+    }
+
+    function renderDiary(entries) {
+      const ul = document.createElement('ul');
+      ul.className = 'diary-list';
+
+      for (const entry of entries) {
+        const { wins, losses, total } = summarize(entry.trades);
+
+        const li = document.createElement('li');
+        li.className = 'diary-day';
+
+        const header = document.createElement('div');
+        header.className = 'diary-day-header';
+        header.innerHTML = `
+          <span class="diary-date">${escapeHtml(entry.date)}</span>
+          <span class="diary-summary">
+            <span class="wl">${wins}勝 ${losses}敗</span>
+            <span class="${pipsClass(total)}">${formatPips(total)}</span>
+          </span>
+        `;
+        li.appendChild(header);
+
+        const trades = document.createElement('ul');
+        trades.className = 'diary-trades';
+        for (const t of entry.trades) {
+          const row = document.createElement('li');
+          row.className = 'diary-trade';
+          row.innerHTML = `
+            <span class="trade-symbol">${escapeHtml(t.symbol)}</span>
+            <span class="trade-pips ${pipsClass(t.pnl_pips)}">${formatPips(t.pnl_pips)}</span>
+          `;
+          trades.appendChild(row);
+        }
+        li.appendChild(trades);
+        ul.appendChild(li);
+      }
+      return ul;
+    }
+
+    async function loadDiary() {
+      const container = document.getElementById('diary-container');
+      const meta = document.getElementById('meta-info');
+
+      try {
+        const resp = await fetch('data/diary.json');
+        if (!resp.ok) throw new Error('データの取得に失敗しました');
+        const data = await resp.json();
+
+        const entries = (data.entries || []).slice().sort(
+          (a, b) => b.date.localeCompare(a.date)
+        );
+
+        const updated = formatLastUpdated(data.lastUpdated);
+        meta.textContent = updated
+          ? `最終更新: ${updated} ／ ${entries.length}日`
+          : `${entries.length}日`;
+
+        if (entries.length === 0) {
+          container.className = 'empty';
+          container.textContent = 'まだ記録がありません';
+          return;
+        }
+
+        container.className = '';
+        container.innerHTML = '';
+        container.appendChild(renderDiary(entries));
+      } catch (err) {
+        const isLocal = location.protocol === 'file:';
+        container.className = 'error';
+        container.innerHTML = `${err.message}${isLocal ? '<br><small>ローカルファイルでは fetch が制限されます。<a href="https://xgwi-inc.github.io/diary.html" style="color:#60a5fa">こちら</a>からアクセスしてください。</small>' : ''}`;
+      }
+    }
+
+    loadDiary();
+  </script>
+
+</body>
+</html>
