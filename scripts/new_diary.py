@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-トレード日記入力スクリプト
-対話式に日々のトレード記録を data/diary.json に追記する。
+取引日誌入力スクリプト
+対話式に日々の取引記録を data/diary.json に追記する。
 
 データ構造:
   {
@@ -184,7 +184,7 @@ def ask_yes_no(prompt, default=True):
 
 def main():
     print("=" * 50)
-    print("トレード日記")
+    print("取引日誌")
     print("=" * 50)
 
     data = load_diary(DATA_PATH)
