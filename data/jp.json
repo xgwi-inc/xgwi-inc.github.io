@@ -1,7 +1,7 @@
 {
   "country": "Japan",
   "code": "jp",
-  "lastUpdated": "2026-05-07",
+  "lastUpdated": "2026-05-08",
   "sources": {
     "interestRate": "BIS WS_CBPOL D.JP (BoJ Policy Rate)",
     "cpi": "総務省統計局 (e-Stat Dashboard, CPI 前年同月比 2020年基準)",
@@ -131,7 +131,8 @@
     "2026-01",
     "2026-02",
     "2026-03",
-    "2026-04"
+    "2026-04",
+    "2026-05"
   ],
   "interestRate": [
     -0.1,
@@ -253,6 +254,7 @@
     0.5,
     0.5,
     0.5,
+    0.75,
     0.75,
     0.75,
     0.75,
@@ -383,6 +385,7 @@
     1.5,
     1.3,
     1.5,
+    null,
     null
   ],
   "unemployment": [
@@ -509,6 +512,7 @@
     2.7,
     2.6,
     2.7,
+    null,
     null
   ]
 }
