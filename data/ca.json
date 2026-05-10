@@ -1,7 +1,7 @@
 {
   "country": "Canada",
   "code": "ca",
-  "lastUpdated": "2026-05-09",
+  "lastUpdated": "2026-05-10",
   "sources": {
     "interestRate": "Bank of Canada (Valet V39079, Overnight Target Rate)",
     "cpi": "Statistics Canada (Vector 41690973, CPI All-items YoY)",
