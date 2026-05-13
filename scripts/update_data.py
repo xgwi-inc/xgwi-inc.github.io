@@ -956,7 +956,23 @@ def fetch_au_cpi():
     except Exception as e:
         print(f"    FRED四半期: [エラー] {e}")
 
-    # 2) Overlay with ABS monthly indicator (authoritative, fresh)
+    # 2) Preserve previously-fetched ABS values from au.json.
+    # AU monthly CPI is ABS-exclusive (OECD/FRED only have quarterly), so
+    # when the ABS API is down we'd otherwise regress to the last quarterly
+    # release. Keeping the last-known-good ABS layer means a transient ABS
+    # outage no longer marks au.cpi stale until ABS recovers (or genuinely
+    # lapses past verify_data.py's 6mo threshold).
+    existing = load_existing("au")
+    if existing:
+        cached = 0
+        for label, val in zip(existing.get("labels", []), existing.get("cpi", [])):
+            if val is not None and label >= "2018-09":
+                monthly[label] = val
+                cached += 1
+        if cached:
+            print(f"    既存ABS値を再利用: {cached} ヶ月分")
+
+    # 3) Overlay with ABS monthly indicator (authoritative when reachable)
     try:
         abs_monthly = fetch_abs_cpi_yoy()
         monthly.update(abs_monthly)
