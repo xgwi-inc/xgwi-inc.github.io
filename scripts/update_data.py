@@ -957,11 +957,17 @@ def fetch_au_cpi():
         print(f"    FRED四半期: [エラー] {e}")
 
     # 2) Preserve previously-fetched ABS values from au.json.
-    # AU monthly CPI is ABS-exclusive (OECD/FRED only have quarterly), so
-    # when the ABS API is down we'd otherwise regress to the last quarterly
-    # release. Keeping the last-known-good ABS layer means a transient ABS
-    # outage no longer marks au.cpi stale until ABS recovers (or genuinely
-    # lapses past verify_data.py's 6mo threshold).
+    # AU monthly CPI is ABS-exclusive — no aggregator carries it at monthly
+    # frequency (verified 2026-05: FRED only has AUSCPIALLQINMEI quarterly;
+    # OECD's CPI dataset explicitly notes "monthly for all countries except
+    # Australia and New Zealand (quarterly data)"; IMF/CPI returns 0 series
+    # for FREQ=M, REF_AREA=AU; DBnomics has no ABS provider). ABS started
+    # the Monthly CPI Indicator in 2018-09 as an experimental series and it
+    # has not been fed into international databases. So when the ABS API is
+    # down (today: CloudFront 403) we'd otherwise regress to the last
+    # quarterly release. Keeping the last-known-good ABS layer means a
+    # transient ABS outage no longer marks au.cpi stale until ABS recovers
+    # (or genuinely lapses past verify_data.py's 6mo threshold).
     existing = load_existing("au")
     if existing:
         cached = 0
