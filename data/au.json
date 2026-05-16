@@ -1,7 +1,7 @@
 {
   "country": "Australia",
   "code": "au",
-  "lastUpdated": "2026-05-15",
+  "lastUpdated": "2026-05-16",
   "sources": {
     "interestRate": "RBA A2 (Cash Rate Target via DBnomics, BIS fallback)",
     "cpi": "ABS Monthly CPI Indicator + FRED quarterly backfill",
@@ -446,7 +446,7 @@
     7.4,
     6.8,
     6.9,
-    7.0,
+    6.9,
     6.8,
     6.6,
     6.3,
@@ -511,7 +511,7 @@
     4.1,
     4.1,
     4.3,
-    null,
+    4.3,
     null,
     null
   ]
