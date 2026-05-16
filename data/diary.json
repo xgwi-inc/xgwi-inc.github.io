@@ -1,5 +1,50 @@
 {
-  "lastUpdated": null,
-  "count": 0,
-  "entries": []
+  "lastUpdated": "2026-05-16T00:00:00+00:00",
+  "count": 5,
+  "entries": [
+    {
+      "date": "2026-05-14",
+      "trades": [
+        { "symbol": "USDJPY", "pnl_pips": -7.2 },
+        { "symbol": "EURJPY", "pnl_pips": -0.7 },
+        { "symbol": "GBPJPY", "pnl_pips": 178.0 },
+        { "symbol": "USDJPY", "pnl_pips": -3.2 },
+        { "symbol": "EURJPY", "pnl_pips": 53.5 },
+        { "symbol": "USDJPY", "pnl_pips": -5.1 },
+        { "symbol": "EURJPY", "pnl_pips": 55.1 },
+        { "symbol": "USDJPY", "pnl_pips": -6.7 }
+      ]
+    },
+    {
+      "date": "2026-05-13",
+      "trades": [
+        { "symbol": "EURJPY", "pnl_pips": -8.8 },
+        { "symbol": "GBPJPY", "pnl_pips": -9.8 },
+        { "symbol": "EURJPY", "pnl_pips": 4.7 },
+        { "symbol": "GBPJPY", "pnl_pips": -6.1 },
+        { "symbol": "GBPJPY", "pnl_pips": -10.8 }
+      ]
+    },
+    {
+      "date": "2026-05-12",
+      "trades": [
+        { "symbol": "EURAUD", "pnl_pips": -9.9 }
+      ]
+    },
+    {
+      "date": "2026-05-08",
+      "trades": [
+        { "symbol": "EURUSD", "pnl_pips": -0.4 }
+      ]
+    },
+    {
+      "date": "2026-05-05",
+      "trades": [
+        { "symbol": "AUDJPY", "pnl_pips": -7.8 },
+        { "symbol": "EURAUD", "pnl_pips": -0.1 },
+        { "symbol": "GBPJPY", "pnl_pips": -6.8 },
+        { "symbol": "GBPUSD", "pnl_pips": -0.1 }
+      ]
+    }
+  ]
 }
