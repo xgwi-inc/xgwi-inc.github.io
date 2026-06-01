@@ -1,173 +1,11 @@
 {
-  "generated": "2026-05-15",
+  "generated": "2026-06-01",
   "months": [
-    "2026-05",
     "2026-06",
-    "2026-07"
+    "2026-07",
+    "2026-08"
   ],
   "events": [
-    {
-      "date": "2026-05-05",
-      "time": "13:30",
-      "country": "au",
-      "flag": "🇦🇺",
-      "type": "rate",
-      "label": "RBA 政策金利発表",
-      "source": "official"
-    },
-    {
-      "date": "2026-05-06",
-      "time": "18:00",
-      "country": "eu",
-      "flag": "🇪🇺",
-      "type": "ppi",
-      "label": "PPI",
-      "source": "Eurostat"
-    },
-    {
-      "date": "2026-05-08",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "FRED"
-    },
-    {
-      "date": "2026-05-08",
-      "time": "21:30",
-      "country": "ca",
-      "flag": "🇨🇦",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "Statistics Canada"
-    },
-    {
-      "date": "2026-05-12",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "cpi",
-      "label": "CPI",
-      "source": "FRED"
-    },
-    {
-      "date": "2026-05-13",
-      "time": "08:50",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "ppi",
-      "label": "CGPI（企業物価指数）",
-      "source": "BoJ"
-    },
-    {
-      "date": "2026-05-13",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "ppi",
-      "label": "PPI",
-      "source": "FRED"
-    },
-    {
-      "date": "2026-05-19",
-      "time": "15:00",
-      "country": "gb",
-      "flag": "🇬🇧",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "ONS"
-    },
-    {
-      "date": "2026-05-20",
-      "time": "15:00",
-      "country": "gb",
-      "flag": "🇬🇧",
-      "type": "cpi",
-      "label": "CPI",
-      "source": "ONS"
-    },
-    {
-      "date": "2026-05-20",
-      "time": "15:00",
-      "country": "gb",
-      "flag": "🇬🇧",
-      "type": "ppi",
-      "label": "PPI",
-      "source": "ONS"
-    },
-    {
-      "date": "2026-05-20",
-      "time": "21:30",
-      "country": "ca",
-      "flag": "🇨🇦",
-      "type": "cpi",
-      "label": "CPI",
-      "source": "Statistics Canada"
-    },
-    {
-      "date": "2026-05-21",
-      "time": "10:30",
-      "country": "au",
-      "flag": "🇦🇺",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "ABS"
-    },
-    {
-      "date": "2026-05-21",
-      "time": "21:30",
-      "country": "ca",
-      "flag": "🇨🇦",
-      "type": "ppi",
-      "label": "IPPI（鉱工業製品価格）",
-      "source": "Statistics Canada"
-    },
-    {
-      "date": "2026-05-22",
-      "time": "08:30",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "cpi",
-      "label": "CPI（全国）",
-      "source": "総務省"
-    },
-    {
-      "date": "2026-05-26",
-      "time": "08:50",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "ppi",
-      "label": "サービス業PPI",
-      "source": "BoJ"
-    },
-    {
-      "date": "2026-05-27",
-      "time": "10:30",
-      "country": "au",
-      "flag": "🇦🇺",
-      "type": "cpi",
-      "label": "CPI（月次）",
-      "source": "ABS"
-    },
-    {
-      "date": "2026-05-28",
-      "time": "18:00",
-      "country": "eu",
-      "flag": "🇪🇺",
-      "type": "unemp",
-      "label": "失業率",
-      "source": "Eurostat"
-    },
-    {
-      "date": "2026-05-29",
-      "time": "08:30",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "unemp",
-      "label": "失業率",
-      "source": "総務省"
-    },
     {
       "date": "2026-06-02",
       "time": "18:00",
@@ -185,15 +23,6 @@
       "type": "ppi",
       "label": "PPI",
       "source": "Eurostat"
-    },
-    {
-      "date": "2026-06-05",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "FRED"
     },
     {
       "date": "2026-06-05",
@@ -394,15 +223,6 @@
       "source": "Eurostat"
     },
     {
-      "date": "2026-07-02",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "FRED"
-    },
-    {
       "date": "2026-07-14",
       "time": "21:30",
       "country": "us",
@@ -464,6 +284,33 @@
       "type": "rate",
       "label": "日銀 金融政策決定会合",
       "source": "official"
+    },
+    {
+      "date": "2026-08-11",
+      "time": "13:30",
+      "country": "au",
+      "flag": "🇦🇺",
+      "type": "rate",
+      "label": "RBA 政策金利発表",
+      "source": "official"
+    },
+    {
+      "date": "2026-08-12",
+      "time": "21:30",
+      "country": "us",
+      "flag": "🇺🇸",
+      "type": "cpi",
+      "label": "CPI",
+      "source": "FRED"
+    },
+    {
+      "date": "2026-08-13",
+      "time": "21:30",
+      "country": "us",
+      "flag": "🇺🇸",
+      "type": "ppi",
+      "label": "PPI",
+      "source": "FRED"
     }
   ]
 }
