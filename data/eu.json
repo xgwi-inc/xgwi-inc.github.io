@@ -1,7 +1,7 @@
 {
   "country": "Euro Area",
   "code": "eu",
-  "lastUpdated": "2026-06-11",
+  "lastUpdated": "2026-06-12",
   "sources": {
     "interestRate": "ECB Data API (FM DFR, Deposit Facility Rate)",
     "cpi": "Eurostat (HICP YoY, prc_hicp_manr + teicp000 合成)",
@@ -261,7 +261,7 @@
     2.0,
     2.0,
     2.0,
-    2.0
+    2.25
   ],
   "cpi": [
     0.3,
