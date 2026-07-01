@@ -1,236 +1,11 @@
 {
-  "generated": "2026-06-15",
+  "generated": "2026-07-01",
   "months": [
-    "2026-06",
     "2026-07",
-    "2026-08"
+    "2026-08",
+    "2026-09"
   ],
   "events": [
-    {
-      "date": "2026-06-02",
-      "time": "18:00",
-      "country": "eu",
-      "flag": "🇪🇺",
-      "type": "cpi",
-      "label": "HICP速報値（5月）",
-      "source": "Eurostat"
-    },
-    {
-      "date": "2026-06-04",
-      "time": "18:00",
-      "country": "eu",
-      "flag": "🇪🇺",
-      "type": "ppi",
-      "label": "PPI",
-      "source": "Eurostat"
-    },
-    {
-      "date": "2026-06-05",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "FRED"
-    },
-    {
-      "date": "2026-06-05",
-      "time": "21:30",
-      "country": "ca",
-      "flag": "🇨🇦",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "Statistics Canada"
-    },
-    {
-      "date": "2026-06-10",
-      "time": "08:50",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "ppi",
-      "label": "CGPI（企業物価指数）",
-      "source": "BoJ"
-    },
-    {
-      "date": "2026-06-10",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "cpi",
-      "label": "CPI",
-      "source": "FRED"
-    },
-    {
-      "date": "2026-06-10",
-      "time": "22:45",
-      "country": "ca",
-      "flag": "🇨🇦",
-      "type": "rate",
-      "label": "BoC 政策金利発表",
-      "source": "official"
-    },
-    {
-      "date": "2026-06-11",
-      "time": "21:15",
-      "country": "eu",
-      "flag": "🇪🇺",
-      "type": "rate",
-      "label": "ECB 政策金利発表",
-      "source": "official"
-    },
-    {
-      "date": "2026-06-11",
-      "time": "21:30",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "ppi",
-      "label": "PPI",
-      "source": "FRED"
-    },
-    {
-      "date": "2026-06-16",
-      "time": "12:00",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "rate",
-      "label": "日銀 金融政策決定会合",
-      "source": "official"
-    },
-    {
-      "date": "2026-06-16",
-      "time": "13:30",
-      "country": "au",
-      "flag": "🇦🇺",
-      "type": "rate",
-      "label": "RBA 政策金利発表",
-      "source": "official"
-    },
-    {
-      "date": "2026-06-17",
-      "time": "15:00",
-      "country": "gb",
-      "flag": "🇬🇧",
-      "type": "cpi",
-      "label": "CPI",
-      "source": "ONS"
-    },
-    {
-      "date": "2026-06-17",
-      "time": "15:00",
-      "country": "gb",
-      "flag": "🇬🇧",
-      "type": "ppi",
-      "label": "PPI",
-      "source": "ONS"
-    },
-    {
-      "date": "2026-06-17",
-      "time": "18:00",
-      "country": "eu",
-      "flag": "🇪🇺",
-      "type": "cpi",
-      "label": "HICP（確報値）",
-      "source": "Eurostat"
-    },
-    {
-      "date": "2026-06-17",
-      "time": "21:30",
-      "country": "ca",
-      "flag": "🇨🇦",
-      "type": "cpi",
-      "label": "CPI",
-      "source": "Statistics Canada"
-    },
-    {
-      "date": "2026-06-18",
-      "time": "03:00",
-      "country": "us",
-      "flag": "🇺🇸",
-      "type": "rate",
-      "label": "FOMC 政策金利発表",
-      "source": "official"
-    },
-    {
-      "date": "2026-06-18",
-      "time": "15:00",
-      "country": "gb",
-      "flag": "🇬🇧",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "ONS"
-    },
-    {
-      "date": "2026-06-18",
-      "time": "20:00",
-      "country": "gb",
-      "flag": "🇬🇧",
-      "type": "rate",
-      "label": "BoE 政策金利発表",
-      "source": "official"
-    },
-    {
-      "date": "2026-06-18",
-      "time": "21:30",
-      "country": "ca",
-      "flag": "🇨🇦",
-      "type": "ppi",
-      "label": "IPPI（鉱工業製品価格）",
-      "source": "Statistics Canada"
-    },
-    {
-      "date": "2026-06-23",
-      "time": "08:50",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "ppi",
-      "label": "サービス業PPI",
-      "source": "BoJ"
-    },
-    {
-      "date": "2026-06-24",
-      "time": "10:30",
-      "country": "au",
-      "flag": "🇦🇺",
-      "type": "cpi",
-      "label": "CPI（月次）",
-      "source": "ABS"
-    },
-    {
-      "date": "2026-06-25",
-      "time": "10:30",
-      "country": "au",
-      "flag": "🇦🇺",
-      "type": "unemp",
-      "label": "雇用統計（失業率）",
-      "source": "ABS"
-    },
-    {
-      "date": "2026-06-26",
-      "time": "08:30",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "cpi",
-      "label": "CPI（全国）",
-      "source": "総務省"
-    },
-    {
-      "date": "2026-06-30",
-      "time": "08:30",
-      "country": "jp",
-      "flag": "🇯🇵",
-      "type": "unemp",
-      "label": "失業率",
-      "source": "総務省"
-    },
-    {
-      "date": "2026-06-30",
-      "time": "18:00",
-      "country": "eu",
-      "flag": "🇪🇺",
-      "type": "unemp",
-      "label": "失業率",
-      "source": "Eurostat"
-    },
     {
       "date": "2026-07-02",
       "time": "21:30",
@@ -338,6 +113,87 @@
       "type": "ppi",
       "label": "PPI",
       "source": "FRED"
+    },
+    {
+      "date": "2026-09-02",
+      "time": "22:45",
+      "country": "ca",
+      "flag": "🇨🇦",
+      "type": "rate",
+      "label": "BoC 政策金利発表",
+      "source": "official"
+    },
+    {
+      "date": "2026-09-04",
+      "time": "21:30",
+      "country": "us",
+      "flag": "🇺🇸",
+      "type": "unemp",
+      "label": "雇用統計（失業率）",
+      "source": "FRED"
+    },
+    {
+      "date": "2026-09-10",
+      "time": "21:15",
+      "country": "eu",
+      "flag": "🇪🇺",
+      "type": "rate",
+      "label": "ECB 政策金利発表",
+      "source": "official"
+    },
+    {
+      "date": "2026-09-10",
+      "time": "21:30",
+      "country": "us",
+      "flag": "🇺🇸",
+      "type": "ppi",
+      "label": "PPI",
+      "source": "FRED"
+    },
+    {
+      "date": "2026-09-11",
+      "time": "21:30",
+      "country": "us",
+      "flag": "🇺🇸",
+      "type": "cpi",
+      "label": "CPI",
+      "source": "FRED"
+    },
+    {
+      "date": "2026-09-17",
+      "time": "03:00",
+      "country": "us",
+      "flag": "🇺🇸",
+      "type": "rate",
+      "label": "FOMC 政策金利発表",
+      "source": "official"
+    },
+    {
+      "date": "2026-09-17",
+      "time": "20:00",
+      "country": "gb",
+      "flag": "🇬🇧",
+      "type": "rate",
+      "label": "BoE 政策金利発表",
+      "source": "official"
+    },
+    {
+      "date": "2026-09-18",
+      "time": "12:00",
+      "country": "jp",
+      "flag": "🇯🇵",
+      "type": "rate",
+      "label": "日銀 金融政策決定会合",
+      "source": "official"
+    },
+    {
+      "date": "2026-09-29",
+      "time": "13:30",
+      "country": "au",
+      "flag": "🇦🇺",
+      "type": "rate",
+      "label": "RBA 政策金利発表",
+      "source": "official"
     }
   ]
 }
