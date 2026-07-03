@@ -1,7 +1,7 @@
 {
   "country": "United States",
   "code": "us",
-  "lastUpdated": "2026-07-02",
+  "lastUpdated": "2026-07-03",
   "sources": {
     "interestRate": "Federal Reserve (FRED DFEDTARU, FOMC target upper bound)",
     "cpi": "Bureau of Labor Statistics (CPI-U 前年同月比)",
@@ -520,7 +520,7 @@
     4.3,
     4.3,
     4.3,
-    null,
+    4.2,
     null
   ]
 }
