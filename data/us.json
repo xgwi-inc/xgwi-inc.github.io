@@ -1,7 +1,7 @@
 {
   "country": "United States",
   "code": "us",
-  "lastUpdated": "2026-08-01",
+  "lastUpdated": "2026-08-02",
   "sources": {
     "interestRate": "Federal Reserve (FRED DFEDTARU, FOMC target upper bound)",
     "cpi": "Bureau of Labor Statistics (CPI-U 前年同月比)",
@@ -134,7 +134,8 @@
     "2026-04",
     "2026-05",
     "2026-06",
-    "2026-07"
+    "2026-07",
+    "2026-08"
   ],
   "interestRate": [
     0.5,
@@ -256,6 +257,7 @@
     4.25,
     4.0,
     4.0,
+    3.75,
     3.75,
     3.75,
     3.75,
@@ -392,6 +394,7 @@
     3.8,
     4.2,
     3.5,
+    null,
     null
   ],
   "unemployment": [
@@ -521,6 +524,7 @@
     4.3,
     4.3,
     4.2,
+    null,
     null
   ]
 }
