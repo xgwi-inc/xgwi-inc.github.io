@@ -1,7 +1,7 @@
 {
   "country": "United Kingdom",
   "code": "gb",
-  "lastUpdated": "2026-08-13",
+  "lastUpdated": "2026-08-14",
   "sources": {
     "interestRate": "Bank of England IADB (IUDBEDR Bank Rate, BIS fallback)",
     "cpi": "OECD (CPI 前年同月比)",
