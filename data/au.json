@@ -1,7 +1,7 @@
 {
   "country": "Australia",
   "code": "au",
-  "lastUpdated": "2026-08-27",
+  "lastUpdated": "2026-08-28",
   "sources": {
     "interestRate": "RBA A2 (Cash Rate Target via DBnomics, BIS fallback)",
     "cpi": "ABS Monthly CPI Indicator + FRED quarterly backfill",
