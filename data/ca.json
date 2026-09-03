@@ -1,7 +1,7 @@
 {
   "country": "Canada",
   "code": "ca",
-  "lastUpdated": "2026-09-02",
+  "lastUpdated": "2026-09-03",
   "sources": {
     "interestRate": "Bank of Canada (Valet V39079, Overnight Target Rate)",
     "cpi": "Statistics Canada (Vector 41690973, CPI All-items YoY)",
@@ -135,7 +135,8 @@
     "2026-05",
     "2026-06",
     "2026-07",
-    "2026-08"
+    "2026-08",
+    "2026-09"
   ],
   "interestRate": [
     0.5,
@@ -255,6 +256,7 @@
     2.75,
     2.75,
     2.5,
+    2.25,
     2.25,
     2.25,
     2.25,
@@ -395,6 +397,7 @@
     3.2,
     2.8,
     3.0,
+    null,
     null
   ],
   "unemployment": [
@@ -525,6 +528,7 @@
     6.6,
     6.5,
     6.4,
+    null,
     null
   ]
 }
