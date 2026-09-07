@@ -1,7 +1,7 @@
 {
   "country": "Japan",
   "code": "jp",
-  "lastUpdated": "2026-09-06",
+  "lastUpdated": "2026-09-07",
   "sources": {
     "interestRate": "BIS WS_CBPOL D.JP (BoJ Policy Rate)",
     "cpi": "総務省統計局 (e-Stat Dashboard, CPI 前年同月比 2020年基準)",
